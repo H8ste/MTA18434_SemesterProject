@@ -54,8 +54,8 @@ namespace discretefrouiertransform
             //ReadInitialArray();
             */
 
-            int sampleRate = 1024;
-            double[] buffer = new double[1024];
+            int sampleRate = 44100;
+            double[] buffer = new double[512];
             double amplitude = 0.7;
             double frequency1 = 250;
             double frequency2 = 752;
@@ -77,13 +77,15 @@ namespace discretefrouiertransform
 
             soundSampleSegment.PrintInputArray();
 
-            soundSampleSegment.FourierTransform();
+            soundSampleSegment.DiscreteFourierTransform();
 
             soundSampleSegment.PrintFreqArrays();
 
+            soundSampleSegment.MutiplyWithPhasor(0.05);
+
             soundSampleSegment.InverseFourierTransform();
 
-            //soundSampleSegment.PrintOutputArray();
+            soundSampleSegment.PrintOutputArray();
 
             Console.ReadLine();
         }

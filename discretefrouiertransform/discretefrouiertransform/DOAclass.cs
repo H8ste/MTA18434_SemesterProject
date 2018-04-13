@@ -6,19 +6,19 @@ namespace discretefrouiertransform
     {
         double meanx, meany, denom, sx, sy, sxy;
         int i, j;
+
  
         public DOAclass()
         {
             
         }
-        public double CrossCorrelation(double[] x, double[] y, int Samples, int maxDelay)
+        public int CrossCorrelation(double[] x, double[] y, int Samples, int maxDelay)
         {
             meanx = 0;
             meany = 0;
-            double r = 0;
-
-           
-           
+            double r;
+            double max = 0;
+            int BestDelay = 0;
             double[] tempx = x;
             double[] tempy = y;
 
@@ -49,21 +49,30 @@ namespace discretefrouiertransform
                 for (i = 0; i < Samples; i++)
                 {
                     j = i + delay;
+                    /*
                     if (j < 0 || j >= Samples)
                         continue;
                     else
                         sxy += (x[i] - meanx) * (y[j] - meany);
-                    /* Or should it be (?)
-                    if (j < 0 || j >= n)
-                       sxy += (x[i] - mx) * (-my);
-                    else
-                       sxy += (x[i] - mx) * (y[j] - my);
-                    */
-                }
-                r = sxy / denom;
+                        */
 
+                    if (j < 0 || j >= Samples)
+                       sxy += (x[i] - meanx) * (-meany);
+                    else
+                       sxy += (x[i] - meanx) * (y[j] - meany);
+                    //Console.Write(sxy + " , ");
+                }
+
+                r = sxy / denom;
+                Console.WriteLine("r: " + r);
+                Console.WriteLine("delay: " + delay);
+                if (r > max)
+                {
+                    max = r;
+                    BestDelay = delay;
+                }
             }
-            return r;
+            return BestDelay;
         }
     }
 }

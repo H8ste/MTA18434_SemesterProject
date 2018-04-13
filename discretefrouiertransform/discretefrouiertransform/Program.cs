@@ -55,15 +55,18 @@ namespace discretefrouiertransform
             */
 
             int sampleRate = 1024;
-            double[] buffer = new double[1024];
+            double[] buffer1 = new double[1024];
+            double[] buffer2 = new double[1024];
             double amplitude = 0.7;
             double frequency1 = 250;
             double frequency2 = 752;
 
-            for (int i = 0; i < buffer.Length; i++)
+            for (int i = 0; i < buffer1.Length-2; i++)
             {
                 double time_in_seconds = (double)i / sampleRate;
-                buffer[i] = 22 * Math.Sin(2 * Math.PI * frequency1 * time_in_seconds) + (57) * Math.Sin(2 * Math.PI * frequency2 * time_in_seconds);
+                buffer1[i] = 22 * Math.Sin(2 * Math.PI * frequency1 * time_in_seconds);
+                buffer2[i+2] = 22 * Math.Sin(2 * Math.PI * frequency1 * time_in_seconds);
+
             }
 
             //for (int n = 0; n < buffer.Length; n++)
@@ -73,7 +76,7 @@ namespace discretefrouiertransform
 
 
             //double[] inputarr = new double[8] { 0, 0.707, 1, 0.707, 0, -0.707, -1, -0.707 };
-            SampleSegment soundSampleSegment = new SampleSegment(buffer, sampleRate);
+            SampleSegment soundSampleSegment = new SampleSegment(buffer1, sampleRate);
 
             soundSampleSegment.PrintInputArray();
 
@@ -86,6 +89,16 @@ namespace discretefrouiertransform
             //soundSampleSegment.PrintOutputArray();
 
             Console.ReadLine();
+
+            //For testing DOAclass
+
+            double[] x = { 0, 0, 0, 1, 2, 3, 0, 0 };
+            double[] y = { 1, 2, 3, 0, 0, 0, 0, 0 };
+
+            DOAclass dO = new DOAclass();
+            int DelayBack = dO.CrossCorrelation(buffer1,buffer2,buffer1.Length,1000);
+            Console.WriteLine("Best delay " + DelayBack);
+
         }
 
 

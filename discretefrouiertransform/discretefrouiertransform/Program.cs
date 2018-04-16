@@ -12,65 +12,13 @@ namespace discretefrouiertransform
         public static List<short[]> buffers = new List<short[]>();
         static void Main(string[] args)
         {
-            //int waveInDevices = WaveIn.DeviceCount;
-            //for (int waveInDevice = 0; waveInDevice < waveInDevices; waveInDevice++)
-            //{
-            //    WaveInCapabilities deviceInfo = WaveIn.GetCapabilities(waveInDevice);
-            //    Console.WriteLine("Device {0}: {1}, {2} channels",
-            //        waveInDevice, deviceInfo.ProductName, deviceInfo.Channels);
-            //}
+            AudioBuffers inputAudio = new AudioBuffers(8000, 1);
 
-            //AlignedArray<short> testing = new AlignedArray<short>();
-
-            WaveInEvent waveIn = new WaveInEvent();
-            waveIn.DeviceNumber = 1;
-            waveIn.DataAvailable += waveIn_DataAvailable;
-            int sampleRate = 8000; // 8 kHz
-            int channels = 1; // mono
-            waveIn.WaveFormat = new WaveFormat(sampleRate, channels);
             //ExampleUsePlanDirectly();
             Console.WriteLine("Enter to start recording");
             Console.ReadLine();
+            inputAudio.WaveInVar.StartRecording();
 
-            buffers.Add(new short[sampleRate / 5]);
-            buffers.Add(new short[sampleRate / 5]);
-            buffers.Add(new short[sampleRate / 5]);
-
-            waveIn.StartRecording();
-
-
-
-
-            //Console.ReadKey();
-            /*
-
-            int sampleRate = 44100;
-            double[] buffer = new double[512];
-            double amplitude = 0.7;
-            double frequency1 = 250;
-            double frequency2 = 752;
-
-            for (int i = 0; i < buffer.Length; i++)
-            {
-                double timeInSeconds = (double)i / sampleRate;
-                buffer[i] = 22 * Math.Sin(2 * Math.PI * frequency1 * timeInSeconds) + (57) * Math.Sin(2 * Math.PI * frequency2 * timeInSeconds);
-            }
-            
-            SampleSegment soundSampleSegment = new SampleSegment(buffer, sampleRate);
-
-            soundSampleSegment.PrintInputArray();
-
-            soundSampleSegment.DiscreteFourierTransform();
-
-            soundSampleSegment.PrintFreqArrays();
-
-            soundSampleSegment.MutiplyWithPhasor(0.05);
-
-            soundSampleSegment.InverseFourierTransform();
-
-            soundSampleSegment.PrintOutputArray();
-
-            */
             Console.ReadLine();
 
         }

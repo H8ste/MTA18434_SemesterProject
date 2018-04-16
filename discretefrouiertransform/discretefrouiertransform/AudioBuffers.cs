@@ -18,6 +18,8 @@ namespace discretefrouiertransform
         private WaveInEvent waveIn;
         private int channels;
 
+        private bool firsttime;
+
 
         public List<short[]> Buffers
         {
@@ -48,13 +50,22 @@ namespace discretefrouiertransform
             get { return waveIn; }
             private set { waveIn = value; }
         }
+        public int Channels
+        {
+            get { return channels; }
+            private set { channels = value; }
+        }
 
         public AudioBuffers(int sampleRate, int channels)
         {
-            List<short[]> buffers;
+            SampleRate = sampleRate;
+            Channels = channels;
+
+
+            Buffers = new List<short[]>();
             for (int i = 0; i < 4; i++)
             {
-                Buffers.Add(new short[sampleRate / 5]);
+                Buffers.Add(new short[SampleRate / 5]);
             }
 
             WaveInDevices = WaveIn.DeviceCount;
@@ -68,7 +79,7 @@ namespace discretefrouiertransform
             WaveInVar = new WaveInEvent();
             WaveInVar.DeviceNumber = 0; //Set to default
             WaveInVar.DataAvailable += waveIn_DataAvailable;
-
+            WaveInVar.WaveFormat = new WaveFormat(SampleRate, Channels);
         }
 
         public void ExampleUsePlanDirectly(short[] inputData)
@@ -120,35 +131,43 @@ namespace discretefrouiertransform
             for (int index = 0; index < e.BytesRecorded; index += 2)
             {
                 short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
-                Console.WriteLine(sample);
+
+                if (!firsttime)
+                {
+                    Buffers[3][index + e.BytesRecorded / 2 / 2] = sample;
+                }
 
                 if (index < e.BytesRecorded / 2)
                 {
-                    buffers[0][index] = sample;
+                    Buffers[0][index] = sample;
                 }
 
                 if (index >= e.BytesRecorded / 2 / 2 && index < e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
                 {
-                    buffers[1][index - e.BytesRecorded / 2 / 2] = sample;
+                    Buffers[1][index - e.BytesRecorded / 2 / 2] = sample;
                 }
 
                 if (index >= e.BytesRecorded / 2)
                 {
-                    buffers[2][index - e.BytesRecorded / 4 * 2] = sample;
+                    Buffers[2][index - e.BytesRecorded / 4 * 2] = sample;
                 }
 
-
-
+                if (index >= e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
+                {
+                    Buffers[3][index - e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2] = sample;
+                }
                 //float sample32 = sample / 32768f;
             }
 
-            for (int i = 0; i < buffers.Count; i++)
+            //for (int i = 0; i < buffers.Count; i++)
             {
                 //ExampleUsePlanDirectly(buffers[i]);
                 //Console.WriteLine("Done");
             }
             /*
             
+
+            //OLD AND SLOW FUNCTION DEPRICATED
             for (int i = 0; i < buffers.Count; i++)
             {
                 Console.WriteLine(System.DateTime.Now.Second);
@@ -172,23 +191,23 @@ namespace discretefrouiertransform
             }
             */
 
-            //Console.Clear();
+            Console.Clear();
 
-            //for (int i = 0; i < buffers.Count; i++)
-            //{
-            //    Console.Write("Buffer " + i + ": ");
-            //    Console.Write("[");
-            //    for (int j = 0; j < buffers[i].Length; j++)
-            //    {
+            for (int i = 0; i < buffers.Count; i++)
+            {
+                Console.Write("Buffer " + i + ": ");
+                Console.Write("[");
+                for (int j = 0; j < buffers[i].Length; j++)
+                {
 
-            //        Console.Write(buffers[i][j]);
-            //        Console.Write(", ");
-            //        if (j == buffers[i].Length - 1)
-            //        {
-            //            Console.WriteLine("]");
-            //        }
-            //    }
-            //}
+                    Console.Write(buffers[i][j]);
+                    Console.Write(", ");
+                    if (j == buffers[i].Length - 1)
+                    {
+                        Console.WriteLine("]");
+                    }
+                }
+            }
 
 
         }

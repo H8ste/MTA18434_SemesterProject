@@ -57,15 +57,13 @@ namespace discretefrouiertransform
             int sampleRate = 1024;
             double[] buffer1 = new double[1024];
             double[] buffer2 = new double[1024];
-            double amplitude = 0.7;
             double frequency1 = 250;
-            double frequency2 = 752;
 
-            for (int i = 0; i < buffer1.Length-2; i++)
+            for (int i = 0; i < buffer1.Length; i++)
             {
                 double time_in_seconds = (double)i / sampleRate;
                 buffer1[i] = 22 * Math.Sin(2 * Math.PI * frequency1 * time_in_seconds);
-                buffer2[i+2] = 22 * Math.Sin(2 * Math.PI * frequency1 * time_in_seconds);
+                buffer2[i] = 22 * Math.Cos(2 * Math.PI * frequency1 * time_in_seconds);
 
             }
 

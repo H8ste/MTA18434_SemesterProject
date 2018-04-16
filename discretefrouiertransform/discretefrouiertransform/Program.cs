@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using FFTW.NET;
 using NAudio.Wave;
 
 
@@ -11,26 +12,36 @@ namespace discretefrouiertransform
         public static List<short[]> buffers = new List<short[]>();
         static void Main(string[] args)
         {
-            int waveInDevices = WaveIn.DeviceCount;
-            for (int waveInDevice = 0; waveInDevice < waveInDevices; waveInDevice++)
-            {
-                WaveInCapabilities deviceInfo = WaveIn.GetCapabilities(waveInDevice);
-                Console.WriteLine("Device {0}: {1}, {2} channels",
-                    waveInDevice, deviceInfo.ProductName, deviceInfo.Channels);
-            }
+            //int waveInDevices = WaveIn.DeviceCount;
+            //for (int waveInDevice = 0; waveInDevice < waveInDevices; waveInDevice++)
+            //{
+            //    WaveInCapabilities deviceInfo = WaveIn.GetCapabilities(waveInDevice);
+            //    Console.WriteLine("Device {0}: {1}, {2} channels",
+            //        waveInDevice, deviceInfo.ProductName, deviceInfo.Channels);
+            //}
+
+            //AlignedArray<short> testing = new AlignedArray<short>();
 
             WaveInEvent waveIn = new WaveInEvent();
-            waveIn.DeviceNumber = 0;
+            waveIn.DeviceNumber = 1;
             waveIn.DataAvailable += waveIn_DataAvailable;
             int sampleRate = 8000; // 8 kHz
             int channels = 1; // mono
             waveIn.WaveFormat = new WaveFormat(sampleRate, channels);
+            //ExampleUsePlanDirectly();
+            Console.WriteLine("Enter to start recording");
+            Console.ReadLine();
+
+            buffers.Add(new short[sampleRate / 5]);
+            buffers.Add(new short[sampleRate / 5]);
+            buffers.Add(new short[sampleRate / 5]);
+
             waveIn.StartRecording();
 
-            buffers.Add(new short[800]);
-            buffers.Add(new short[800]);
-            buffers.Add(new short[800]);
 
+
+
+            //Console.ReadKey();
             /*
 
             int sampleRate = 44100;
@@ -60,17 +71,22 @@ namespace discretefrouiertransform
             soundSampleSegment.PrintOutputArray();
 
             */
-
             Console.ReadLine();
+
         }
         static void waveIn_DataAvailable(object sender, WaveInEventArgs e)
         {
-            Console.WriteLine(e.BytesRecorded);
+            Console.WriteLine(e.BytesRecorded + " samples recieved");
+
+            //Console.WriteLine(e.BytesRecorded);
             //RUN EVERY 1600 SAMPLES RECORDED
+
+            
             for (int index = 0; index < e.BytesRecorded; index += 2)
             {
                 short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
-
+                Console.WriteLine(sample);
+                
                 if (index < e.BytesRecorded / 2)
                 {
                     buffers[0][index] = sample;
@@ -85,46 +101,64 @@ namespace discretefrouiertransform
                 {
                     buffers[2][index - e.BytesRecorded / 4 * 2] = sample;
                 }
+                
+
 
                 //float sample32 = sample / 32768f;
             }
-
+            
             for (int i = 0; i < buffers.Count; i++)
             {
+                //ExampleUsePlanDirectly(buffers[i]);
+                //Console.WriteLine("Done");
+            }
+            /*
+            
+            for (int i = 0; i < buffers.Count; i++)
+            {
+                Console.WriteLine(System.DateTime.Now.Second);
                 SampleSegment soundSampleSegment = new SampleSegment(buffers[i], 8000);
 
                 //soundSampleSegment.PrintInputArray();
 
                 soundSampleSegment.DiscreteFourierTransform();
 
-                soundSampleSegment.PrintFreqArrays();
+                //soundSampleSegment.PrintFreqArrays();
 
                 //soundSampleSegment.MutiplyWithPhasor(0.05);
 
                 soundSampleSegment.InverseFourierTransform();
+                Console.WriteLine(System.DateTime.Now.Second);
+                Console.WriteLine("calculated");
+
 
                 //soundSampleSegment.PrintOutputArray();
-            }
-            //Console.Clear();
-            /*
-            for (int i = 0; i < buffers.Count; i++)
-            {
-                Console.Write("Buffer " + i + ": ");
-                Console.Write("[");
-                for (int j = 0; j < buffers[i].Length; j++)
-                {
 
-                    Console.Write(buffers[i][j]);
-                    Console.Write(", ");
-                    if (j == buffers[i].Length - 1)
-                    {
-                        Console.WriteLine("]");
-                    }
-                }
             }
             */
 
+            //Console.Clear();
+            
+            //for (int i = 0; i < buffers.Count; i++)
+            //{
+            //    Console.Write("Buffer " + i + ": ");
+            //    Console.Write("[");
+            //    for (int j = 0; j < buffers[i].Length; j++)
+            //    {
+
+            //        Console.Write(buffers[i][j]);
+            //        Console.Write(", ");
+            //        if (j == buffers[i].Length - 1)
+            //        {
+            //            Console.WriteLine("]");
+            //        }
+            //    }
+            //}
+            
+
         }
+
+       
         //FFT radix-2 algorithm
         //N chose is: N = 2^B
 

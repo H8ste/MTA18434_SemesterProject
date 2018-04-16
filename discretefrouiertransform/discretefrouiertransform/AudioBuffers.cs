@@ -20,6 +20,8 @@ namespace discretefrouiertransform
 
         private bool firsttime;
 
+        private int i = 0;
+
 
         public List<short[]> Buffers
         {
@@ -60,12 +62,13 @@ namespace discretefrouiertransform
         {
             SampleRate = sampleRate;
             Channels = channels;
+            firsttime = true;
 
 
             Buffers = new List<short[]>();
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 5; i++)
             {
-                Buffers.Add(new short[SampleRate / 5]);
+                Buffers.Add(new short[SampleRate / 5 / 2]);
             }
 
             WaveInDevices = WaveIn.DeviceCount;
@@ -80,6 +83,7 @@ namespace discretefrouiertransform
             WaveInVar.DeviceNumber = 0; //Set to default
             WaveInVar.DataAvailable += waveIn_DataAvailable;
             WaveInVar.WaveFormat = new WaveFormat(SampleRate, Channels);
+
         }
 
         public void ExampleUsePlanDirectly(short[] inputData)
@@ -112,7 +116,7 @@ namespace discretefrouiertransform
                 }
                 // frequencyDomain -> timeDomain
                 ifft.Execute();
-                Console.WriteLine("length: "+ ifft.Output.Length);
+                Console.WriteLine("length: " + ifft.Output.Length);
                 Console.WriteLine(System.DateTime.Now.Millisecond - currentTime);
 
 
@@ -132,9 +136,9 @@ namespace discretefrouiertransform
             {
                 short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
 
-                if (!firsttime)
+                if (!firsttime && index < e.BytesRecorded / 2 / 2)
                 {
-                    Buffers[3][index + e.BytesRecorded / 2 / 2] = sample;
+                    Buffers[3 + (i - 1) % 2][index + Buffers[3 + i % 2].Length / 2] = sample;
                 }
 
                 if (index < e.BytesRecorded / 2)
@@ -149,15 +153,70 @@ namespace discretefrouiertransform
 
                 if (index >= e.BytesRecorded / 2)
                 {
-                    Buffers[2][index - e.BytesRecorded / 4 * 2] = sample;
+                    Buffers[2][index - e.BytesRecorded / 2] = sample;
                 }
 
                 if (index >= e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
                 {
-                    Buffers[3][index - e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2] = sample;
+                   // Console.WriteLine(index - (e.BytesRecorded / 2) - e.BytesRecorded / 2 / 2);
+                    Buffers[3 + i % 2][index - e.BytesRecorded / 2 - e.BytesRecorded / 2 / 2] = sample;
                 }
+
+
+
+
+
+
+
+                //if (!firsttime && index < e.BytesRecorded / 2 / 2)
+                //{
+                //    Buffers[3 + i - 1 % 2][index + Buffers[3 + i % 2].Length / 2] = sample;
+
+                //}
+
+
+                //if (index < e.BytesRecorded / 2)
+                //{
+                //    Buffers[0][index] = sample;
+                //}
+
+                //if (index >= e.BytesRecorded / 2 / 2 && index < e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
+                //{
+                //    Buffers[1][index - e.BytesRecorded / 2 / 2] = sample;
+                //}
+
+                //if (index >= e.BytesRecorded / 2)
+                //{
+                //    Buffers[2][index - e.BytesRecorded / 4 * 2] = sample;
+                //}
+
+                //if (index >= e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
+                //{
+                //    Buffers[3 + i % 2][index - (e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)] = sample;
+                //}
+
+
                 //float sample32 = sample / 32768f;
             }
+
+            //Works don't touch plez
+            if (!firsttime)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    for (int index = 0; index < Buffers[3 + j % 2].Length / 2; index++)
+                    {
+                        //Console.WriteLine("Længde" + Buffers[3 + j % 2].Length / 2 * (j % 2));
+                        Buffers[3 + j % 2][index + (Buffers[3 + j % 2].Length / 2 * ((i+1) % 2))] = 0;
+                    }
+
+                    i++;
+                }
+            }
+            firsttime = false;
+            i++;
+
+
 
             //for (int i = 0; i < buffers.Count; i++)
             {
@@ -208,6 +267,8 @@ namespace discretefrouiertransform
                     }
                 }
             }
+
+            Console.ReadLine();
 
 
         }

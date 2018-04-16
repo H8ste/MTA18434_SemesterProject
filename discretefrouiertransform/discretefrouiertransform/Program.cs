@@ -21,90 +21,94 @@ namespace discretefrouiertransform
 
             Console.ReadLine();
 
+            while (true)
+            {
+
+            }
         }
-        static void waveIn_DataAvailable(object sender, WaveInEventArgs e)
-        {
-            Console.WriteLine(e.BytesRecorded + " samples recieved");
+        //static void waveIn_DataAvailable(object sender, WaveInEventArgs e)
+        //{
+        //    Console.WriteLine(e.BytesRecorded + " samples recieved");
 
-            //Console.WriteLine(e.BytesRecorded);
-            //RUN EVERY 1600 SAMPLES RECORDED
+        //    //Console.WriteLine(e.BytesRecorded);
+        //    //RUN EVERY 1600 SAMPLES RECORDED
 
             
-            for (int index = 0; index < e.BytesRecorded; index += 2)
-            {
-                short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
-                Console.WriteLine(sample);
+        //    for (int index = 0; index < e.BytesRecorded; index += 2)
+        //    {
+        //        short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
+        //        Console.WriteLine(sample);
                 
-                if (index < e.BytesRecorded / 2)
-                {
-                    buffers[0][index] = sample;
-                }
+        //        if (index < e.BytesRecorded / 2)
+        //        {
+        //            buffers[0][index] = sample;
+        //        }
 
-                if (index >= e.BytesRecorded / 2 / 2 && index < e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
-                {
-                    buffers[1][index - e.BytesRecorded / 2 / 2] = sample;
-                }
+        //        if (index >= e.BytesRecorded / 2 / 2 && index < e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
+        //        {
+        //            buffers[1][index - e.BytesRecorded / 2 / 2] = sample;
+        //        }
 
-                if (index >= e.BytesRecorded / 2)
-                {
-                    buffers[2][index - e.BytesRecorded / 4 * 2] = sample;
-                }
+        //        if (index >= e.BytesRecorded / 2)
+        //        {
+        //            buffers[2][index - e.BytesRecorded / 4 * 2] = sample;
+        //        }
                 
 
 
-                //float sample32 = sample / 32768f;
-            }
+        //        //float sample32 = sample / 32768f;
+        //    }
             
-            for (int i = 0; i < buffers.Count; i++)
-            {
-                //ExampleUsePlanDirectly(buffers[i]);
-                //Console.WriteLine("Done");
-            }
-            /*
+        //    for (int i = 0; i < buffers.Count; i++)
+        //    {
+        //        //ExampleUsePlanDirectly(buffers[i]);
+        //        //Console.WriteLine("Done");
+        //    }
+        //    /*
             
-            for (int i = 0; i < buffers.Count; i++)
-            {
-                Console.WriteLine(System.DateTime.Now.Second);
-                SampleSegment soundSampleSegment = new SampleSegment(buffers[i], 8000);
+        //    for (int i = 0; i < buffers.Count; i++)
+        //    {
+        //        Console.WriteLine(System.DateTime.Now.Second);
+        //        SampleSegment soundSampleSegment = new SampleSegment(buffers[i], 8000);
 
-                //soundSampleSegment.PrintInputArray();
+        //        //soundSampleSegment.PrintInputArray();
 
-                soundSampleSegment.DiscreteFourierTransform();
+        //        soundSampleSegment.DiscreteFourierTransform();
 
-                //soundSampleSegment.PrintFreqArrays();
+        //        //soundSampleSegment.PrintFreqArrays();
 
-                //soundSampleSegment.MutiplyWithPhasor(0.05);
+        //        //soundSampleSegment.MutiplyWithPhasor(0.05);
 
-                soundSampleSegment.InverseFourierTransform();
-                Console.WriteLine(System.DateTime.Now.Second);
-                Console.WriteLine("calculated");
+        //        soundSampleSegment.InverseFourierTransform();
+        //        Console.WriteLine(System.DateTime.Now.Second);
+        //        Console.WriteLine("calculated");
 
 
-                //soundSampleSegment.PrintOutputArray();
+        //        //soundSampleSegment.PrintOutputArray();
 
-            }
-            */
+        //    }
+        //    */
 
-            //Console.Clear();
+        //    //Console.Clear();
             
-            //for (int i = 0; i < buffers.Count; i++)
-            //{
-            //    Console.Write("Buffer " + i + ": ");
-            //    Console.Write("[");
-            //    for (int j = 0; j < buffers[i].Length; j++)
-            //    {
+        //    //for (int i = 0; i < buffers.Count; i++)
+        //    //{
+        //    //    Console.Write("Buffer " + i + ": ");
+        //    //    Console.Write("[");
+        //    //    for (int j = 0; j < buffers[i].Length; j++)
+        //    //    {
 
-            //        Console.Write(buffers[i][j]);
-            //        Console.Write(", ");
-            //        if (j == buffers[i].Length - 1)
-            //        {
-            //            Console.WriteLine("]");
-            //        }
-            //    }
-            //}
+        //    //        Console.Write(buffers[i][j]);
+        //    //        Console.Write(", ");
+        //    //        if (j == buffers[i].Length - 1)
+        //    //        {
+        //    //            Console.WriteLine("]");
+        //    //        }
+        //    //    }
+        //    //}
             
 
-        }
+        //}
 
        
         //FFT radix-2 algorithm

@@ -1,99 +1,119 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
+using FFTW.NET;
+using NAudio.Wave;
 
 
 namespace discretefrouiertransform
 {
     class Program
     {
-        //static short[] audioStored_temp1;
-        //static short[] audioStored_temp2;
-
-        //static short[] audioStored_temp3;
-
-        //private static String filepath = "C:/Users/Nickl/Documents/Visual Studio 2017/Projects/beamformingphasor/discretefrouiertransform/discretefrouiertransform/testingrec.m4a";
-        //private static String filepath = AppDomain.CurrentDomain.BaseDirectory + "testing.wav";
-
+        public static List<short[]> buffers = new List<short[]>();
         static void Main(string[] args)
         {
-            /*
-            audioStored_temp1 = new short[512];
-            audioStored_temp2 = new short[512];
-            audioStored_temp3 = new short[512];
+            AudioBuffers inputAudio = new AudioBuffers(8000, 1);
 
-            WaveFileObject storedAudioFile = new WaveFileObject(filepath);
-
-            for (int i = 0; i < 512 * 2; i++)
-            {
-                if (i < 512)
-                {
-                    audioStored_temp1[i] = storedAudioFile.soundData[i];
-                }
-
-                if (i >= 512 / 2 && i < 512 + 512 / 2)
-                {
-                    audioStored_temp2[i - 512 / 2] = storedAudioFile.soundData[i];
-                }
-
-                if (i >= 512)
-                {
-                    audioStored_temp3[i - 512] = storedAudioFile.soundData[i];
-                }
-            }
-
-
-            //storedAudioFile.PrintData();
-
-            List<short[]> storedInputs = new List<short[]>();
-            storedInputs.Add(audioStored_temp1);
-            storedInputs.Add(audioStored_temp2);
-            storedInputs.Add(audioStored_temp3);
-
-            List<Complex[]> frequency_arr = new List<Complex[]>();
-
-            //ReadInitialArray();
-            */
-
-            int sampleRate = 1024;
-            double[] buffer = new double[1024];
-            double amplitude = 0.7;
-            double frequency1 = 250;
-            double frequency2 = 752;
-
-            for (int i = 0; i < buffer.Length; i++)
-            {
-                double time_in_seconds = (double)i / sampleRate;
-                buffer[i] = 22 * Math.Sin(2 * Math.PI * frequency1 * time_in_seconds) + (57) * Math.Sin(2 * Math.PI * frequency2 * time_in_seconds);
-            }
-
-            //for (int n = 0; n < buffer.Length; n++)
-            //{
-            //    buffer[n] = (amplitude * Math.Sin((2 * Math.PI * n * frequency1))) + (amplitude * Math.Sin((2 * Math.PI * n * frequency2)));
-            //}
-
-
-            //double[] inputarr = new double[8] { 0, 0.707, 1, 0.707, 0, -0.707, -1, -0.707 };
-            SampleSegment soundSampleSegment = new SampleSegment(buffer, sampleRate);
-
-            soundSampleSegment.PrintInputArray();
-
-            soundSampleSegment.FourierTransform();
-
-            soundSampleSegment.PrintFreqArrays();
-
-            soundSampleSegment.InverseFourierTransform();
-
-            //soundSampleSegment.PrintOutputArray();
+            //ExampleUsePlanDirectly();
+            Console.WriteLine("Enter to start recording");
+            Console.ReadLine();
+            inputAudio.WaveInVar.StartRecording();
 
             Console.ReadLine();
+
+            while (true)
+            {
+
+            }
         }
+        //static void waveIn_DataAvailable(object sender, WaveInEventArgs e)
+        //{
+        //    Console.WriteLine(e.BytesRecorded + " samples recieved");
+
+        //    //Console.WriteLine(e.BytesRecorded);
+        //    //RUN EVERY 1600 SAMPLES RECORDED
+
+            
+        //    for (int index = 0; index < e.BytesRecorded; index += 2)
+        //    {
+        //        short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
+        //        Console.WriteLine(sample);
+                
+        //        if (index < e.BytesRecorded / 2)
+        //        {
+        //            buffers[0][index] = sample;
+        //        }
+
+        //        if (index >= e.BytesRecorded / 2 / 2 && index < e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
+        //        {
+        //            buffers[1][index - e.BytesRecorded / 2 / 2] = sample;
+        //        }
+
+        //        if (index >= e.BytesRecorded / 2)
+        //        {
+        //            buffers[2][index - e.BytesRecorded / 4 * 2] = sample;
+        //        }
+                
 
 
+        //        //float sample32 = sample / 32768f;
+        //    }
+            
+        //    for (int i = 0; i < buffers.Count; i++)
+        //    {
+        //        //ExampleUsePlanDirectly(buffers[i]);
+        //        //Console.WriteLine("Done");
+        //    }
+        //    /*
+            
+        //    for (int i = 0; i < buffers.Count; i++)
+        //    {
+        //        Console.WriteLine(System.DateTime.Now.Second);
+        //        SampleSegment soundSampleSegment = new SampleSegment(buffers[i], 8000);
+
+        //        //soundSampleSegment.PrintInputArray();
+
+        //        soundSampleSegment.DiscreteFourierTransform();
+
+        //        //soundSampleSegment.PrintFreqArrays();
+
+        //        //soundSampleSegment.MutiplyWithPhasor(0.05);
+
+        //        soundSampleSegment.InverseFourierTransform();
+        //        Console.WriteLine(System.DateTime.Now.Second);
+        //        Console.WriteLine("calculated");
+
+
+        //        //soundSampleSegment.PrintOutputArray();
+
+        //    }
+        //    */
+
+        //    //Console.Clear();
+            
+        //    //for (int i = 0; i < buffers.Count; i++)
+        //    //{
+        //    //    Console.Write("Buffer " + i + ": ");
+        //    //    Console.Write("[");
+        //    //    for (int j = 0; j < buffers[i].Length; j++)
+        //    //    {
+
+        //    //        Console.Write(buffers[i][j]);
+        //    //        Console.Write(", ");
+        //    //        if (j == buffers[i].Length - 1)
+        //    //        {
+        //    //            Console.WriteLine("]");
+        //    //        }
+        //    //    }
+        //    //}
+            
+
+        //}
+
+       
         //FFT radix-2 algorithm
         //N chose is: N = 2^B
 
-
         //      f = (k/N) * f.s
-
     }
 }

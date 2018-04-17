@@ -28,29 +28,14 @@ namespace discretefrouiertransform
 
             for (int i = 0; i < Samples; i++)
             {
-
                 buffer1[i] = fileObject1.soundData[i];
                 buffer2[i] = fileObject2.soundData[i];
-
             }
-
-            //For testing DOAclass
-
-            double[] x = { 0, 0, 0, 1, 2, 3, 0, 0 };
-            double[] y = { 1, 2, 3, 0, 0, 0, 0, 0 };
 
             DOAclass dO = new DOAclass();
             int CalDelay = dO.CrossCorrelation(buffer1,buffer2,buffer1.Length,200);
             Console.WriteLine("Best delay " + CalDelay);
 
         }
-
-
-        //FFT radix-2 algorithm
-        //N chose is: N = 2^B
-
-
-        //      f = (k/N) * f.s
-
     }
 }

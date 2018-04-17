@@ -193,7 +193,7 @@ namespace discretefrouiertransform
             Console.Clear();
 
             printBuffer(Buffers);
-            
+
             for (int i = 0; i < buffers.Count; i++)
                 ShiftedBuffers[i] = timeDelaySignal(Buffers[i], 0.000001);
 
@@ -202,34 +202,44 @@ namespace discretefrouiertransform
 
             for (int j = 0; j < OutputSignal.Length; j++)
             {
-                double hann = 0.5 * (1 - Math.Cos(2*Math.PI*j/(OutputSignal.Length-1)));
+                double hann = 0.5 * (1 - Math.Cos(2 * Math.PI * j / (OutputSignal.Length - 1)));
 
                 if (!firsttime && j < e.BytesRecorded / 2 / 2)
                 {
-                    hann = 0.5 * (1 - Math.Cos(2 * Math.PI * ((((i-1)%2)*Buffers[0].Length/2) + j) / (OutputSignal.Length - 1)));
-                    OutputSignal[j] = (hann * ShiftedBuffers[0][j]) + (hann * ShiftedBuffers[3 + (i - 1) % 2][j]);
-                } else if (firsttime && j < e.BytesRecorded / 2 / 2)
+                    hann = 0.5 * (1 - Math.Cos(2 * Math.PI * ((((i - 1) % 2) * Buffers[0].Length / 2) + j) / (OutputSignal.Length - 1)));
+                    OutputSignal[j] = (hann * ShiftedBuffers[0][j]) + (hann * ShiftedBuffers[3 + (i - 1) % 2][j + ShiftedBuffers[3 + (i - 1) % 2].Length / 2]);
+                }
+                else if (firsttime && j < e.BytesRecorded / 2 / 2)
                 {
                     OutputSignal[j] = ShiftedBuffers[0][j];
                 }
                 else if (j >= e.BytesRecorded / 2 / 2 && j < e.BytesRecorded / 2)
                 {
-                    OutputSignal[j] = (hann * ShiftedBuffers[0][j]) + (hann * ShiftedBuffers[1][j]);
+                    OutputSignal[j] = (hann * ShiftedBuffers[0][j]) + (hann * ShiftedBuffers[1][j - ShiftedBuffers[1].Length / 2]);
                 }
                 else if (j >= e.BytesRecorded / 2 && j < e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
                 {
-                    //OutputSignal[j] = (hann)
+                    OutputSignal[j] = (hann * ShiftedBuffers[1][j - ShiftedBuffers[1].Length / 2]) +
+                                      (hann * ShiftedBuffers[2][j - ShiftedBuffers[2].Length]);
                 }
-                else if (j < e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
+                else if (j >= e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
                 {
-                    
+                    hann = 0.5 * (1 - Math.Cos(2 * Math.PI * (Buffers[0].Length / 2.0) + j) / (OutputSignal.Length - 1));
+                    OutputSignal[j] = (hann * ShiftedBuffers[2][j - ShiftedBuffers[2].Length]) +
+                                      (hann * ShiftedBuffers[3 + (i % 2)][
+                                           j - e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2]);
                 }
-
-
-
-                    //OutputSignal[i] = 
-
             }
+
+            short[] originalsignal = new short[e.BytesRecorded];
+            for (int index = 0; index < e.BytesRecorded; index += 2)
+            {
+                originalsignal[index] = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
+            }
+
+            printBuffer(originalsignal);
+
+            printBuffer(OutputSignal);
 
             Console.ReadLine();
 
@@ -265,7 +275,7 @@ for (int i = 0; i < buffers.Count; i++)
 
         }
 
-        private void printBuffer(List<short[]>input)
+        private void printBuffer(List<short[]> input)
         {
             Console.WriteLine("ORIGINAL SIGNAL");
             for (int i = 0; i < input.Count; i++)
@@ -302,6 +312,38 @@ for (int i = 0; i < buffers.Count; i++)
                     }
                 }
             }
+        }
+        private void printBuffer(double[] input)
+        {
+            Console.WriteLine("FINAL SIGNAL");
+            Console.Write("[");
+            for (int j = 0; j < input.Length; j++)
+            {
+
+                Console.Write(input[j]);
+                Console.Write(", ");
+                if (j == input.Length - 1)
+                {
+                    Console.WriteLine("]");
+                }
+            }
+
+        }
+        private void printBuffer(short[] input)
+        {
+            Console.WriteLine("ORIGINAL SIGNAL");
+            Console.Write("[");
+            for (int j = 0; j < input.Length; j++)
+            {
+
+                Console.Write(input[j]);
+                Console.Write(", ");
+                if (j == input.Length - 1)
+                {
+                    Console.WriteLine("]");
+                }
+            }
+
         }
     }
 

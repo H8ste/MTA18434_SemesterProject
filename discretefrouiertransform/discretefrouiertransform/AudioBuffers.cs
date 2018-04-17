@@ -90,7 +90,7 @@ namespace discretefrouiertransform
         {
             // Use the same arrays for as many transformations as you like.
             // If you can use the same arrays for your transformations, this is faster than calling DFT.FFT / DFT.IFFT
-            using (var timeDomain = new FftwArrayComplex(SampleRate / 5))
+            using (var timeDomain = new FftwArrayComplex(SampleRate / 5 / 2))
             using (var frequencyDomain = new FftwArrayComplex(timeDomain.GetSize()))
             using (var fft = FftwPlanC2C.Create(timeDomain, frequencyDomain, DftDirection.Forwards))
             using (var ifft = FftwPlanC2C.Create(frequencyDomain, timeDomain, DftDirection.Backwards))

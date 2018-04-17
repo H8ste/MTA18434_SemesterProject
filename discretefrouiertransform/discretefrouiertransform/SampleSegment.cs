@@ -89,7 +89,7 @@ namespace discretefrouiertransform
         /// </summary>
         /// <param name="s">Amount of time to shift signal in the time-domain.</param>
         public void MutiplyWithPhasor(double s)
-            {
+        {
             for (int i = 0; i < FreqArr.Length; i++)
             {
                 double angle = ((2 * Math.PI) / FreqArr.Length) * SampleRate * i * s;
@@ -104,7 +104,7 @@ namespace discretefrouiertransform
         {
             Console.WriteLine();
             Console.WriteLine();
-            for (int j = 0; j < FreqArr.Length/2; j++)
+            for (int j = 0; j < FreqArr.Length / 2; j++)
             {
                 if (FreqArr[j].Magnitude > 1)
                 {

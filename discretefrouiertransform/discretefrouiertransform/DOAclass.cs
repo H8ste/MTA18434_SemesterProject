@@ -7,11 +7,6 @@ namespace discretefrouiertransform
         double meanx, meany, denom, sx, sy, sxy;
         int i, j;
 
- 
-        public DOAclass()
-        {
-            
-        }
         public int CrossCorrelation(double[] x, double[] y, int Samples, int maxDelay)
         {
             meanx = 0;

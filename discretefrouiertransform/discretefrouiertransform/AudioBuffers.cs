@@ -13,6 +13,7 @@ namespace discretefrouiertransform
     {
         private List<short[]> buffers;
         private List<double[]> shiftedBuffers;
+        private double[] outputSignal;
         private int sampleRate;
 
         private int waveInDevices;
@@ -35,6 +36,12 @@ namespace discretefrouiertransform
         {
             get { return shiftedBuffers; }
             private set { shiftedBuffers = value; }
+        }
+
+        public double[] OutputSignal
+        {
+            get { return outputSignal; }
+            private set { outputSignal = value; }
         }
 
         public int SampleRate
@@ -71,7 +78,7 @@ namespace discretefrouiertransform
             SampleRate = sampleRate;
             Channels = channels;
             firsttime = true;
-
+            OutputSignal = new double[SampleRate / 5 / 2];
 
             Buffers = new List<short[]>();
             ShiftedBuffers = new List<double[]>();
@@ -93,7 +100,6 @@ namespace discretefrouiertransform
             WaveInVar.DeviceNumber = 0; //Set to default
             WaveInVar.DataAvailable += waveIn_DataAvailable;
             WaveInVar.WaveFormat = new WaveFormat(SampleRate, Channels);
-
         }
 
         public double[] timeDelaySignal(short[] signalInput, double s)
@@ -163,82 +169,72 @@ namespace discretefrouiertransform
             {
                 short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
 
+
                 if (!firsttime && index < e.BytesRecorded / 2 / 2)
-                {
                     Buffers[3 + (i - 1) % 2][index + Buffers[3 + i % 2].Length / 2] = sample;
-                }
 
                 if (index < e.BytesRecorded / 2)
-                {
                     Buffers[0][index] = sample;
-                }
 
                 if (index >= e.BytesRecorded / 2 / 2 && index < e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
-                {
                     Buffers[1][index - e.BytesRecorded / 2 / 2] = sample;
-                }
 
                 if (index >= e.BytesRecorded / 2)
-                {
                     Buffers[2][index - e.BytesRecorded / 2] = sample;
-                }
 
                 if (index >= e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
-                {
-                    // Console.WriteLine(index - (e.BytesRecorded / 2) - e.BytesRecorded / 2 / 2);
                     Buffers[3 + (i % 2)][index - e.BytesRecorded / 2 - e.BytesRecorded / 2 / 2] = sample;
-                }
+
             }
 
-            firsttime = false;
-            i++;
+
 
 
             Console.Clear();
 
-            Console.WriteLine("ORIGINAL SIGNAL");
-
+            printBuffer(Buffers);
+            
             for (int i = 0; i < buffers.Count; i++)
-            {
-                Console.Write("Buffer " + i + ": ");
-                Console.Write("[");
-                for (int j = 0; j < buffers[i].Length; j++)
-                {
-
-                    Console.Write(buffers[i][j]);
-                    Console.Write(", ");
-                    if (j == buffers[i].Length - 1)
-                    {
-                        Console.WriteLine("]");
-                    }
-                }
-            }
-
-            for (int i = 0; i < buffers.Count; i++)
-            {
                 ShiftedBuffers[i] = timeDelaySignal(Buffers[i], 0.000001);
-                //Console.WriteLine("Done");
-            }
 
-            Console.WriteLine("SHIFTED SIGNAL");
 
-            for (int i = 0; i < ShiftedBuffers.Count; i++)
+            printBuffer(ShiftedBuffers);
+
+            for (int j = 0; j < OutputSignal.Length; j++)
             {
-                Console.Write("Buffer " + i + ": ");
-                Console.Write("[");
-                for (int j = 0; j < ShiftedBuffers[i].Length; j++)
+                double hann = 0.5 * (1 - Math.Cos(2*Math.PI*j/(OutputSignal.Length-1)));
+
+                if (!firsttime && j < e.BytesRecorded / 2 / 2)
                 {
-                    Console.Write(ShiftedBuffers[i][j]);
-                    Console.Write(", ");
-                    if (j == buffers[i].Length - 1)
-                    {
-                        Console.WriteLine("]");
-                    }
+                    hann = 0.5 * (1 - Math.Cos(2 * Math.PI * ((((i-1)%2)*Buffers[0].Length/2) + j) / (OutputSignal.Length - 1)));
+                    OutputSignal[j] = (hann * ShiftedBuffers[0][j]) + (hann * ShiftedBuffers[3 + (i - 1) % 2][j]);
+                } else if (firsttime && j < e.BytesRecorded / 2 / 2)
+                {
+                    OutputSignal[j] = ShiftedBuffers[0][j];
                 }
+                else if (j >= e.BytesRecorded / 2 / 2 && j < e.BytesRecorded / 2)
+                {
+                    OutputSignal[j] = (hann * ShiftedBuffers[0][j]) + (hann * ShiftedBuffers[1][j]);
+                }
+                else if (j >= e.BytesRecorded / 2 && j < e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
+                {
+                    //OutputSignal[j] = (hann)
+                }
+                else if (j < e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
+                {
+                    
+                }
+
+
+
+                    //OutputSignal[i] = 
+
             }
 
             Console.ReadLine();
 
+            firsttime = false;
+            i++;
 
             /*
 
@@ -268,5 +264,46 @@ for (int i = 0; i < buffers.Count; i++)
 */
 
         }
+
+        private void printBuffer(List<short[]>input)
+        {
+            Console.WriteLine("ORIGINAL SIGNAL");
+            for (int i = 0; i < input.Count; i++)
+            {
+                Console.Write("Buffer " + i + ": ");
+                Console.Write("[");
+                for (int j = 0; j < input[i].Length; j++)
+                {
+
+                    Console.Write(input[i][j]);
+                    Console.Write(", ");
+                    if (j == input[i].Length - 1)
+                    {
+                        Console.WriteLine("]");
+                    }
+                }
+            }
+        }
+        private void printBuffer(List<double[]> input)
+        {
+            Console.WriteLine("SHIFTED SIGNAL");
+            for (int i = 0; i < input.Count; i++)
+            {
+                Console.Write("Buffer " + i + ": ");
+                Console.Write("[");
+                for (int j = 0; j < input[i].Length; j++)
+                {
+
+                    Console.Write(input[i][j]);
+                    Console.Write(", ");
+                    if (j == input[i].Length - 1)
+                    {
+                        Console.WriteLine("]");
+                    }
+                }
+            }
+        }
     }
+
+
 }

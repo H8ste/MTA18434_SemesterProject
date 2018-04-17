@@ -78,7 +78,7 @@ namespace discretefrouiertransform
             SampleRate = sampleRate;
             Channels = channels;
             firsttime = true;
-            OutputSignal = new double[SampleRate / 5 / 2];
+            OutputSignal = new double[SampleRate / 5];
 
             Buffers = new List<short[]>();
             ShiftedBuffers = new List<double[]>();
@@ -117,11 +117,6 @@ namespace discretefrouiertransform
             using (var pinOut = new PinnedArray<Complex>(output))
             using (var in1Out = new PinnedArray<double>(inOut))
             {
-                //Console.WriteLine(pinIn.GetLength(input.Rank - 1) / 2 + 1);
-                //Console.WriteLine(pinOut.GetLength(input.Rank - 1));
-
-                //Console.WriteLine(input.Length);
-                //Console.WriteLine(output.Length);
 
                 DFT.FFT(pinIn, pinOut);
                 for (int j = 0; j < pinOut.Length; j++)
@@ -138,23 +133,6 @@ namespace discretefrouiertransform
 
                 return inOut;
             }
-
-            //Console.WriteLine("Input");
-
-            //for (int i = 0; i < input.Length; i++)
-            //{
-            //    Console.WriteLine(input[i]);
-            //}
-
-            //Console.WriteLine();
-            //Console.WriteLine();
-
-            //Console.WriteLine("output");
-            //for (int i = 0; i < inOut.Length; i++)
-            //    Console.WriteLine(inOut[i] / input.Length);
-
-
-
         }
 
         public void waveIn_DataAvailable(object sender, WaveInEventArgs e)
@@ -162,8 +140,7 @@ namespace discretefrouiertransform
             Console.WriteLine(e.BytesRecorded + " samples recieved");
 
             //Console.WriteLine(e.BytesRecorded);
-            //RUN EVERY 1600 SAMPLES RECORDED
-
+            //RUN EVERY SAMPLING RATE / 5
 
             for (int index = 0; index < e.BytesRecorded; index += 2)
             {
@@ -187,18 +164,13 @@ namespace discretefrouiertransform
 
             }
 
-
-
-
             Console.Clear();
 
-            printBuffer(Buffers);
-
+            //printBuffer(Buffers, "SEPERATED INPUT SIGNAL);
             for (int i = 0; i < buffers.Count; i++)
                 ShiftedBuffers[i] = timeDelaySignal(Buffers[i], 0.000001);
 
-
-            printBuffer(ShiftedBuffers);
+            //printBuffer(ShiftedBuffers, "SHIFTED SEPERATED INPUT SIGNAL);
 
             for (int j = 0; j < OutputSignal.Length; j++)
             {
@@ -227,57 +199,32 @@ namespace discretefrouiertransform
                     hann = 0.5 * (1 - Math.Cos(2 * Math.PI * (Buffers[0].Length / 2.0) + j) / (OutputSignal.Length - 1));
                     OutputSignal[j] = (hann * ShiftedBuffers[2][j - ShiftedBuffers[2].Length]) +
                                       (hann * ShiftedBuffers[3 + (i % 2)][
-                                           j - e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2]);
+                                           j - e.BytesRecorded / 2 - e.BytesRecorded / 2 / 2]);
                 }
             }
 
             short[] originalsignal = new short[e.BytesRecorded];
             for (int index = 0; index < e.BytesRecorded; index += 2)
-            {
                 originalsignal[index] = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
-            }
 
-            printBuffer(originalsignal);
+            printBuffer(originalsignal, "ORIGINAL SIGNAL");
+            printBuffer(OutputSignal, "FINALSHIFTED SIGNAL");
 
-            printBuffer(OutputSignal);
+            double[] beamformedSignal = new double[e.BytesRecorded];
+            for (int j = 0; j < beamformedSignal.Length; j++)
+                beamformedSignal[j] = originalsignal[j] + OutputSignal[j];
 
-            Console.ReadLine();
+            printBuffer(beamformedSignal, "BEAMFORMED SIGNAL");
 
             firsttime = false;
             i++;
 
-            /*
-
-
-        //OLD AND SLOW FUNCTION DEPRICATED
-for (int i = 0; i < buffers.Count; i++)
-{
-    Console.WriteLine(System.DateTime.Now.Second);
-    SampleSegment soundSampleSegment = new SampleSegment(buffers[i], 8000);
-
-    //soundSampleSegment.PrintInputArray();
-
-    soundSampleSegment.DiscreteFourierTransform();
-
-    //soundSampleSegment.PrintFreqArrays();
-
-    //soundSampleSegment.MutiplyWithPhasor(0.05);
-
-    soundSampleSegment.InverseFourierTransform();
-    Console.WriteLine(System.DateTime.Now.Second);
-    Console.WriteLine("calculated");
-
-
-    //soundSampleSegment.PrintOutputArray();
-
-}
-*/
-
+            Console.ReadLine();
         }
 
-        private void printBuffer(List<short[]> input)
+        private void printBuffer(List<short[]> input, string text)
         {
-            Console.WriteLine("ORIGINAL SIGNAL");
+            Console.WriteLine(text);
             for (int i = 0; i < input.Count; i++)
             {
                 Console.Write("Buffer " + i + ": ");
@@ -294,9 +241,9 @@ for (int i = 0; i < buffers.Count; i++)
                 }
             }
         }
-        private void printBuffer(List<double[]> input)
+        private void printBuffer(List<double[]> input, string text)
         {
-            Console.WriteLine("SHIFTED SIGNAL");
+            Console.WriteLine(text);
             for (int i = 0; i < input.Count; i++)
             {
                 Console.Write("Buffer " + i + ": ");
@@ -313,9 +260,9 @@ for (int i = 0; i < buffers.Count; i++)
                 }
             }
         }
-        private void printBuffer(double[] input)
+        private void printBuffer(double[] input, string text)
         {
-            Console.WriteLine("FINAL SIGNAL");
+            Console.WriteLine(text);
             Console.Write("[");
             for (int j = 0; j < input.Length; j++)
             {
@@ -329,9 +276,9 @@ for (int i = 0; i < buffers.Count; i++)
             }
 
         }
-        private void printBuffer(short[] input)
+        private void printBuffer(short[] input, string text)
         {
-            Console.WriteLine("ORIGINAL SIGNAL");
+            Console.WriteLine(text);
             Console.Write("[");
             for (int j = 0; j < input.Length; j++)
             {

@@ -44,7 +44,7 @@ namespace MachineLearning
 
                     Console.WriteLine(chunk);
 
-                    if (chunk == "JUNK")
+                    if (chunk != "fmt ")
                     {
                         byte[] junk = br.ReadBytes(36);
                     }

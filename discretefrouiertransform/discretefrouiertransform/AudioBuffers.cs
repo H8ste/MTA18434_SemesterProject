@@ -159,7 +159,7 @@ namespace discretefrouiertransform
                 if (index >= e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
                 {
                    // Console.WriteLine(index - (e.BytesRecorded / 2) - e.BytesRecorded / 2 / 2);
-                    Buffers[3 + i % 2][index - e.BytesRecorded / 2 - e.BytesRecorded / 2 / 2] = sample;
+                    Buffers[3 + (i % 2)][index - e.BytesRecorded / 2 - e.BytesRecorded / 2 / 2] = sample;
                 }
 
 
@@ -200,19 +200,19 @@ namespace discretefrouiertransform
             }
 
             //Works don't touch plez
-            if (!firsttime)
-            {
-                for (int j = 0; j < 2; j++)
-                {
-                    for (int index = 0; index < Buffers[3 + j % 2].Length / 2; index++)
-                    {
-                        //Console.WriteLine("Længde" + Buffers[3 + j % 2].Length / 2 * (j % 2));
-                        Buffers[3 + j % 2][index + (Buffers[3 + j % 2].Length / 2 * ((i+1) % 2))] = 0;
-                    }
+            //if (!firsttime)
+            //{
+            //    for (int j = 0; j < 2; j++)
+            //    {
+            //        for (int index = 0; index < Buffers[3 + j % 2].Length / 2; index++)
+            //        {
+            //            //Console.WriteLine("Længde" + Buffers[3 + j % 2].Length / 2 * (j % 2));
+            //            Buffers[3 + j % 2][index + (Buffers[3 + j % 2].Length / 2 * ((i+1) % 2))] = 0;
+            //        }
 
-                    i++;
-                }
-            }
+            //        i++;
+            //    }
+            //}
             firsttime = false;
             i++;
 

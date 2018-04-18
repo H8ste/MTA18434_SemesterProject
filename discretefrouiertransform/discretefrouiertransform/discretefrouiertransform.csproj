@@ -54,6 +54,7 @@
     <Compile Include="SampleSegment.cs" />
     <Compile Include="DOAclass.cs" />
     <Compile Include="WaveFileObject.cs" />
+    <Compile Include="AudioBuffers.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

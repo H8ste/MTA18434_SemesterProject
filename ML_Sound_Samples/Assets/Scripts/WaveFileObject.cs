@@ -4,14 +4,20 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
+[System.Serializable]
 public class WaveFileObject
 {
 
-    public WavHeader header;
-    public IList soundData;
+    [SerializeField] public WavHeader header;
+    [SerializeField] public IList soundData;
 
     public WaveFileObject()
     {
+    }
+
+    public WaveFileObject(WavHeader header)
+    {
+        this.header = header;
     }
 
     public WaveFileObject(WavHeader header, IList soundData)
@@ -54,21 +60,21 @@ public class WaveFileObject
 
                 if (header.bit == 16)
                 {
-                    soundData = new List<short>();
+                    soundData = new List<ushort>();
 
                     for (int i = 0; i < header.dataSize / header.blockSize; i++)
                     {
-                        soundData.Add((short)br.ReadUInt16());
+                        soundData.Add(br.ReadUInt16());
                     }
                 }
 
                 if (header.bit == 32)
                 {
-                    soundData = new List<int>();
+                    soundData = new List<uint>();
 
                     for (int i = 0; i < header.dataSize / header.blockSize; i++)
                     {
-                        soundData.Add((int)br.ReadUInt32());
+                        soundData.Add(br.ReadUInt32());
                     }
                 }
 
@@ -136,21 +142,21 @@ public class WaveFileObject
 
                 if (tempObj.header.bit == 16)
                 {
-                    tempObj.soundData = new List<short>();
+                    tempObj.soundData = new List<ushort>();
 
                     for (int i = 0; i < tempObj.header.dataSize / tempObj.header.blockSize; i++)
                     {
-                        tempObj.soundData.Add(br.ReadInt16());
+                        tempObj.soundData.Add(br.ReadUInt16());
                     }
                 }
 
                 if (tempObj.header.bit == 32)
                 {
-                    tempObj.soundData = new List<int>();
+                    tempObj.soundData = new List<uint>();
 
                     for (int i = 0; i < tempObj.header.dataSize / tempObj.header.blockSize; i++)
                     {
-                        tempObj.soundData.Add(br.ReadInt32());
+                        tempObj.soundData.Add(br.ReadUInt32());
                     }
                 }
 
@@ -212,7 +218,7 @@ public class WaveFileObject
                     {
                         if (i < obj.soundData.Count)
                         {
-                            bw.Write((short)obj.soundData[i]);
+                            bw.Write((ushort)obj.soundData[i]);
                         }
                         else
                         {
@@ -227,7 +233,7 @@ public class WaveFileObject
                     {
                         if (i < obj.soundData.Count)
                         {
-                            bw.Write((int)obj.soundData[i]);
+                            bw.Write((uint)obj.soundData[i]);
                         }
                         else
                         {
@@ -298,26 +304,44 @@ public class WaveFileObject
         return chunks;
     }
 
-    public WaveFileObject[] ToWaveChunks(int ms)
+    public WaveFileObject[] ToWaveChunks(int ms, WaveFileObject obj)
     {
         double secs = ms / 1000d;
-        long chunkSamples = (long)(header.sampleRate * secs);
-        long chunkCount = (header.dataSize / header.blockSize) / chunkSamples;
+        long chunkSamples = (long)(obj.header.sampleRate * secs);
+        long chunkCount = (obj.header.dataSize / obj.header.blockSize) / chunkSamples;
         WaveFileObject[] waves = new WaveFileObject[chunkCount];
-
         int osIndex = 0;
 
         for (int i = 0; i < chunkCount; i++)
         {
-            for (int j = 0; j < chunkSamples; j++)
+            waves[i] = new WaveFileObject();
+            WavHeader tempHeader = header;
+            if (header.bit == 16)
             {
-                waves[i].soundData[j] = soundData[osIndex];
-                osIndex++;
+                tempHeader.dataSize = (uint)chunkSamples * 2;
+                tempHeader.blockSize = 2;
+                waves[i].soundData = new List<ushort>();
+            }
+            if (header.bit == 32)
+            {
+                tempHeader.dataSize = (uint)chunkSamples * 4;
+                tempHeader.blockSize = 4;
+                waves[i].soundData = new List<uint>();
+            }
+            if (header.bit == 64)
+            {
+                tempHeader.dataSize = (uint)chunkSamples * 8;
+                tempHeader.blockSize = 8;
+                waves[i].soundData = new List<double>();
             }
 
-            waves[i].header.dataSize = (uint)chunkSamples * 4;
+            for (int j = 0; j < chunkSamples; j++)
+            {
+                waves[i].soundData.Add(obj.soundData[osIndex]);
+                osIndex++;
+            }
+            waves[i].header = tempHeader;
         }
-
         return waves;
     }
 
@@ -366,37 +390,55 @@ public class WaveFileObject
         return chunks;
     }
 
-    public WaveFileObject[] ToWaveChunksWithOverlaps(int ms)
+    public WaveFileObject[] ToWaveChunksWithOverlaps(int ms, WaveFileObject obj)
     {
         double secs = ms / 1000d;
-        long chunkSamples = (long)(header.sampleRate * secs);
-        long chunkCount = (((header.dataSize / header.blockSize) / chunkSamples) * 2) - 2;
+        long chunkSamples = (long)(obj.header.sampleRate * secs);
+        long chunkCount = (((obj.header.dataSize / obj.header.blockSize) / chunkSamples) * 2) - 2;
         WaveFileObject[] waves = new WaveFileObject[chunkCount];
-
         int osIndex = 0;
-        // Even indexes are the original chunks
-        // Odd indexes are the overlaps
 
-        for (int i = 0; i < chunkCount / 2; i++)
+        for (int i = 0; i < chunkCount; i++)
         {
+            waves[i] = new WaveFileObject();
+            WavHeader tempHeader = header;
 
-            for (int j = 0; j < chunkSamples; j++)
+            if (header.bit == 16)
             {
-                waves[i].soundData[j] = soundData[osIndex];
-
-                if (i == 1)
-                {
-                    waves[i].soundData[j] = soundData[osIndex - (int)(chunkSamples * .5)];
-                }
-
-                if (i > 1 && i < chunkCount - 2)
-                {
-                    waves[i].soundData[j] = soundData[osIndex - (int)(chunkSamples * .5)];
-                }
-                osIndex++;
+                tempHeader.dataSize = (uint)chunkSamples * 2;
+                tempHeader.blockSize = 2;
+                waves[i].soundData = new List<ushort>();
+            }
+            if (header.bit == 32)
+            {
+                tempHeader.dataSize = (uint)chunkSamples * 4;
+                tempHeader.blockSize = 4;
+                waves[i].soundData = new List<uint>();
+            }
+            if (header.bit == 64)
+            {
+                tempHeader.dataSize = (uint)chunkSamples * 8;
+                tempHeader.blockSize = 8;
+                waves[i].soundData = new List<double>();
             }
 
-            waves[i].header.dataSize = (uint)chunkSamples * 4;
+            waves[i].header = tempHeader;
+        }
+
+        for (int i = 0; i < chunkCount; i++)
+        {
+            for (int j = 0; j < chunkSamples; j++)
+            {
+                if (!IsOdd(i))
+                {
+                    waves[i].soundData.Add(obj.soundData[osIndex]);
+                    osIndex++;
+                }
+                else
+                {
+                    waves[i].soundData.Add(obj.soundData[osIndex + j - (int)(chunkSamples * .5)]);
+                }
+            }
         }
         return waves;
     }
@@ -409,6 +451,12 @@ public class WaveFileObject
         }
     }
 
+    public static bool IsOdd(int value)
+    {
+        return value % 2 != 0;
+    }
+
+    [System.Serializable]
     public struct WavHeader
     {
         public byte[] riff;
@@ -425,4 +473,49 @@ public class WaveFileObject
         public byte[] dataID;
         public uint dataSize;
     }
+
+    [System.Serializable]
+    public class WFOTransporter
+    {
+        public WavHeader header;
+        public ushort[] arrShort;
+        public uint[] arrInt;
+        public double[] arrDouble;
+
+        public WFOTransporter(WaveFileObject obj)
+        {
+            this.header = obj.header;
+
+            switch (obj.header.bit)
+            {
+                case 16:
+                    arrShort = new ushort[obj.soundData.Count];
+                    for (int i = 0; i < obj.soundData.Count; i++)
+                    {
+                        arrShort[i] = (ushort)obj.soundData[i];
+                    }
+                    break;
+
+                case 32:
+                    arrInt = new uint[obj.soundData.Count];
+                    for (int i = 0; i < obj.soundData.Count; i++)
+                    {
+                        arrInt[i] = (uint)obj.soundData[i];
+                    }
+                    break;
+
+                case 64:
+                    arrDouble = new double[obj.soundData.Count];
+                    for (int i = 0; i < obj.soundData.Count; i++)
+                    {
+                        arrDouble[i] = (double)obj.soundData[i];
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+
 }

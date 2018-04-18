@@ -17,19 +17,19 @@ namespace MachineLearning
             int width = 10;
             int height = 30;
 
-            /*
+            
             Random rand = new Random();
             NeuralNetwork nn = new NeuralNetwork(inputSize, width, height, outputSize);
 
-            WaveFileObject waveFileObject = new WaveFileObject("C:/Users/Mikkel/Documents/Audio1Mathias.wav");
+            WaveFileObject waveFileObject = new WaveFileObject("C:/Users/Mikke/Documents/MTA18434_SemesterProject/ML_Sound_Samples/Assets/Resources/TrainingData/guitarup_full.wav");
 
             short[][] soundChunks = waveFileObject.ToChunks(20);
 
             Spectrogram spec = new Spectrogram(DSProcess.STFT(soundChunks), waveFileObject.header.sampleRate);
 
-            spec.PrintSpectrogram();
-            */
-            Example1D();
+            //spec.PrintSpectrogram();
+            
+            //Example1D();
             /*
             DataSample[] samples = new DataSample[10];
 

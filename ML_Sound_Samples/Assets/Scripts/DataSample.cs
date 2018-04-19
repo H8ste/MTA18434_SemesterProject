@@ -3,13 +3,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public class DataSample
 {
-    public float[] data;
+    public double[] data;
     public int label;
     public static int labelSize;
 
-    public DataSample(float[] data, Label label)
+    public DataSample()
+    {
+        labelSize = Enum.GetNames(typeof(Label)).Length;
+    }
+
+    public DataSample(double[] data)
+    {
+        this.data = data;
+        labelSize = Enum.GetNames(typeof(Label)).Length;
+    }
+
+    public DataSample(double[] data, Label label)
     {
         this.data = data;
         this.label = (int)label;

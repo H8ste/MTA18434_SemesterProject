@@ -7,6 +7,9 @@ using UnityEngine;
 
 public class TCPServer : MonoBehaviour
 {
+    public string jsonResult = "";
+    public bool clientReady = false;
+
     private TcpListener tcpListener;
     private Thread tcpListenerThread;
     private TcpClient tcpClient;
@@ -15,66 +18,70 @@ public class TCPServer : MonoBehaviour
     {
         // Start TcpServer background thread 		
         tcpListenerThread = new Thread(new ThreadStart(ListenForIncommingRequests));
-        tcpListenerThread.IsBackground = true;
         tcpListenerThread.Start();
     }
 
     private void ListenForIncommingRequests()
     {
-        try
-        {	
-            tcpListener = new TcpListener(IPAddress.Parse("127.0.0.1"), 10000);
-            tcpListener.Start();
-            Debug.Log("Server is listening");
-
-            tcpClient = tcpListener.AcceptTcpClient();
-
-            Debug.Log("Accepted");
-
+        while (true)
+        {
             try
             {
-                StreamReader reader = new StreamReader(tcpClient.GetStream());
-                StreamWriter writer = new StreamWriter(tcpClient.GetStream());
-                string s = "";
+                clientReady = false;
+                tcpListener = new TcpListener(IPAddress.Parse("127.0.0.1"), 10000);
+                tcpListener.Start();
+                Debug.Log("Server is listening");
 
-                while (!(s = reader.ReadLine()).Equals("Quit") || (s == null))
+                tcpClient = tcpListener.AcceptTcpClient();
+
+                Debug.Log("Accepted");
+                if (tcpClient.Connected)
                 {
-                    HandleJsonMessage(s);
-                    writer.WriteLine("From Server: Thank you for the contribution to the Animal Database");
-                    writer.Flush();
+                    clientReady = true;
                 }
 
-                // Closes the different objects
-                reader.Close();
-                writer.Close();
-                tcpClient.Close();
-            }
-            catch (IOException e)
-            {
-                Debug.Log(e.Message);
-                throw;
-            }
-            // Close client after exception
-            finally
-            {
-                if (tcpClient != null)
+                try
                 {
+                    StreamReader reader = new StreamReader(tcpClient.GetStream());
+                    StreamWriter writer = new StreamWriter(tcpClient.GetStream());
+                    string s = "";
+
+                    while (!(s = reader.ReadLine()).Equals("Quit") || (s == null))
+                    {
+                        HandleJsonMessage(s);
+                    }
+
+                    // Closes the different objects
+                    reader.Close();
+                    writer.Close();
                     tcpClient.Close();
                 }
+                catch (IOException e)
+                {
+                    Debug.Log(e.Message);
+                    throw;
+                }
+                // Close client after exception
+                finally
+                {
+                    if (tcpClient != null)
+                    {
+                        tcpClient.Close();
+                    }
+                }
             }
-
-        }
-        catch (SocketException socketException)
-        {
-            Debug.Log("SocketException " + socketException.ToString());
-        }
+            catch (SocketException socketException)
+            {
+                Debug.Log("SocketException " + socketException.ToString());
+            }
+        }       
     }
 
     private void HandleJsonMessage(string s)
     {
         if (IsValidJson(s))
         {
-
+            jsonResult = s;
         }
     }
 
@@ -106,17 +113,7 @@ public class TCPServer : MonoBehaviour
         if ((strInput.StartsWith("{") && strInput.EndsWith("}")) || //For object
             (strInput.StartsWith("[") && strInput.EndsWith("]"))) //For array
         {
-            // Try to parse json string, which throws exception if it cant. 
-            try
-            {
-                var obj = JsonUtility.FromJson<MonoBehaviour>(strInput);
-                return true;
-            }
-            catch (Exception ex) //some other exception
-            {
-                Debug.Log(ex.ToString());
-                return false;
-            }
+            return true;
         }
         else
         {

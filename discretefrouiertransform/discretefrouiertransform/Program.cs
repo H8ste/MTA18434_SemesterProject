@@ -12,7 +12,7 @@ namespace discretefrouiertransform
         public static List<short[]> buffers = new List<short[]>();
         static void Main(string[] args)
         {
-            AudioBuffers inputAudio = new AudioBuffers(8000, 1);
+            AudioBuffers inputAudio = new AudioBuffers(8000, 2);
 
             //ExampleUsePlanDirectly();
             Console.WriteLine("Enter to start recording");

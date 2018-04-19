@@ -191,6 +191,74 @@ public class WaveFileObject
         return tempObj;
     }
 
+    public static void WriteWaveFile(double[] data, string path)
+    {
+        WavHeader header = new WavHeader
+        {
+            riff = new byte[4] { 82, 73, 70, 70 },
+            size = 36 + (uint)data.Length * 2,
+            wavID = new byte[4] { 87, 65, 86, 69 },
+            fmtID = new byte[4] { 102, 109, 116, 32 },
+            fmtSize = 16,
+            format = 1,
+            channels = 1,
+            sampleRate = 44100,
+            bytePerSec = 176400,
+            blockSize = 8,
+            bit = 16,
+            dataID = new byte[4] { 100, 97, 116, 97 },
+            dataSize = (uint)data.Length * 2
+        };
+
+        using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write))
+        using (BinaryWriter bw = new BinaryWriter(fs))
+        {
+            try
+            {
+                bw.Write(header.riff);
+                bw.Write(header.size);
+                bw.Write(header.wavID);
+                bw.Write(header.fmtID);
+                bw.Write(header.fmtSize);
+                bw.Write(header.format);
+                bw.Write(header.channels);
+                bw.Write(header.sampleRate);
+                bw.Write(header.bytePerSec);
+                bw.Write(header.blockSize);
+                bw.Write(header.bit);
+                bw.Write(header.dataID);
+                bw.Write(header.dataSize);
+
+                if (header.bit == 16)
+                {
+                    for (int i = 0; i < header.dataSize / header.blockSize; i++)
+                    {
+                        if (i < data.Length)
+                        {
+                            bw.Write((short)data[i]);
+                        }
+                        else
+                        {
+                            bw.Write(0);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                if (bw != null)
+                {
+                    bw.Close();
+                }
+                if (fs != null)
+                {
+                    fs.Close();
+                }
+            }
+        }
+        return;
+    }
+
     public static void WriteWaveFile(WaveFileObject obj, string path)
     {
         using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write))

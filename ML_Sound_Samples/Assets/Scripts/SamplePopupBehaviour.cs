@@ -22,7 +22,7 @@ public class SamplePopupBehaviour : MonoBehaviour
     {
         source = GetComponent<AudioSource>();
 
-        Object o = Resources.Load(popData.waveFilePath, );
+        Object o = Resources.Load(popData.waveFilePath);
 
         Debug.Log(o.GetType());
 

@@ -58,7 +58,13 @@ public class OnStartUpBehaviour : MonoBehaviour
         Debug.Log("Number of samples: " + wavCount);
 
         Thread t = new Thread(new ThreadStart(Process));
-        t.Start();     
+        t.Start();
+
+        double[] arr = new double[waveObjects[0].soundData.Count];
+        waveObjects[1].soundData.CopyTo(arr, 0);
+
+        WriteWaveFile(arr, baseSamplePath + "/" + "test.wav");
+        Debug.Log("wrote file");
     }
 
     private void Update()

@@ -18,7 +18,7 @@ namespace discretefrouiertransform
             Console.WriteLine("Enter to start recording");
             Console.ReadLine();
             inputAudio.WaveInVar.StartRecording();
-
+            Console.WriteLine("Recording");
 
             while (true)
             {

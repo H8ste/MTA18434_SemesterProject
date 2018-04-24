@@ -273,7 +273,7 @@ namespace discretefrouiertransform
             //}
             //List<byte> byteArr = new List<byte>();
 
-            for (int j = 0; j < OutputSignal.Length; j++)
+            for (int j = 0; j < beamformedSignal.Length; j++)
             {
                 byte[] tempByteArr = BitConverter.GetBytes((short)beamformedSignal[j]);
                 //Console.WriteLine("Starting to Append file");
@@ -305,7 +305,7 @@ namespace discretefrouiertransform
 
 
             //WaveFileObject.WriteWaveFile(byteArr.ToArray(), "C:/Users/Nickl/Documents/testing.wav", SampleRate);
-            if (duration > SampleRate*10)
+            if (duration > SampleRate*30)
             {
                 Console.WriteLine("File written");
                 Console.ReadLine();

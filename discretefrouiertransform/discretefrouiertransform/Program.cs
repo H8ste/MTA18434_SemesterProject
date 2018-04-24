@@ -16,7 +16,6 @@ namespace discretefrouiertransform
             WaveFileObject fileObject2 = new WaveFileObject("/Users/Lynge/Desktop/Audio 2HejSiriStoej.wav");
 
             int Samples = fileObject1.soundData.Count;
-            double delay = 100;
 
 
             short[] buffer1 = new short[Samples];
@@ -30,7 +29,7 @@ namespace discretefrouiertransform
 
            
             //var CalDelay = DOA.CrossCorrelation(buffer1,buffer2,buffer1.Length,200);
-            AudioBuffers audioBuff = new AudioBuffers(44100,2);
+            AudioBuffers audioBuff = new AudioBuffers(8000,2);
             var CalDelay = audioBuff.timeDelaySignalDOA(buffer1, buffer2,200);
 
 

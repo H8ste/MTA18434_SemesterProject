@@ -91,7 +91,7 @@ namespace discretefrouiertransform
                 Buffers.Add(new short[SampleRate / 5 / 2]);
                 ShiftedBuffers.Add(new double[SampleRate / 5 / 2]);
             }
-            /*
+
             WaveInDevices = WaveIn.DeviceCount;
             for (int waveInDevice = 0; waveInDevice < WaveInDevices; waveInDevice++)
             {
@@ -103,7 +103,7 @@ namespace discretefrouiertransform
             WaveInVar = new WaveInEvent();
             WaveInVar.DeviceNumber = 0; //Set to default
             WaveInVar.DataAvailable += waveIn_DataAvailable;
-            WaveInVar.WaveFormat = new WaveFormat(SampleRate, Channels);*/
+            WaveInVar.WaveFormat = new WaveFormat(SampleRate, Channels);
         }
 
         public double[] timeDelaySignal(short[] signalInput, double s)

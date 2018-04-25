@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +15,7 @@ namespace MachineLearning
         public int hiddenSize;
         public int outputSize;
 
-        private float[] inputlayerValue;
+        private double[] inputlayerValue;
         private float[] outputLayerValue;
         private float[,] hiddenLayerValue;
 
@@ -35,6 +37,33 @@ namespace MachineLearning
             InputLayerInit();
             HiddenLayerInit();
             OutputLayerInit();
+        }
+
+        public void SaveNetwork(string path)
+        {
+            string file = JsonConvert.SerializeObject(this);
+
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+
+            File.WriteAllText(path, file);
+        }
+
+        public static NeuralNetwork LoadNetwork(string path)
+        {
+            if (File.Exists(path))
+            {
+                string file = File.ReadAllText(path);
+                NeuralNetwork network = JsonConvert.DeserializeObject<NeuralNetwork>(file);
+                return network;
+            }
+            else
+            {
+                return null;
+                throw new FileNotFoundException();
+            }
         }
 
         public void DataClassification(DataSample sample)
@@ -193,7 +222,7 @@ namespace MachineLearning
 
                 for (int j = 0; j < hiddenSize; j++)
                 {
-                    sum += (inputlayerValue[i] * inputLayerWeights[i, j]);
+                    sum += (float)(inputlayerValue[i] * inputLayerWeights[i, j]);
                 }
 
                 hiddenLayerValue[0, i] = ActivationFunctions.Sigmoid(sum);
@@ -227,7 +256,7 @@ namespace MachineLearning
                 outputLayerValue[i] = ActivationFunctions.Sigmoid(sum);
             }
 
-            Console.WriteLine("Cost after Activation is: " + ReturnCost(CreateIdealVector(sample.label)));
+            //Console.WriteLine("Cost after Activation is: " + ReturnCost(CreateIdealVector(sample.label)));
         }
 
         private GradientWeightVector[] GradientBackPropArr(DataSample[] samples)
@@ -323,7 +352,7 @@ namespace MachineLearning
                 for (int j = 0; j < hiddenSize; j++)
                 {
                     weightVector.inputLayerWeights[i, j] = inputLayerDelta[i] * hiddenLayerValue[0, j] *
-                        (1 - hiddenLayerValue[0, j]) * inputlayerValue[i];
+                        (1 - hiddenLayerValue[0, j]) * (float)inputlayerValue[i];
                 }
             }
 
@@ -350,7 +379,7 @@ namespace MachineLearning
 
         private void InputLayerInit()
         {
-            inputlayerValue = new float[inputSize];
+            inputlayerValue = new double[inputSize];
             inputLayerWeights = new float[inputSize, hiddenSize];
 
             for (int i = 0; i < inputSize; i++)

@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using FFTW.NET;
 using NAudio.Wave;
-//using WaveFileObject;
 
 namespace discretefrouiertransform
 {
@@ -32,7 +31,6 @@ namespace discretefrouiertransform
 
         private int i = 0;
         private int duration = 0;
-
 
         public List<short[]> Buffers
         {
@@ -178,14 +176,13 @@ namespace discretefrouiertransform
             for (int index = 0; index < e.BytesRecorded; index += 2)
             {
                 short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
-                mics[(index / 2) % 2][(index / 2) - k] = sample;
-                if ((index / 2) % 2 == 0)
+                mics[(index / Channels) % Channels][(index / Channels) - k] = sample;
+                if ((index / Channels) % Channels == 0)
                     k++;
             }
 
 
             splitInput(mics[0]);
-
 
             //printBuffer(mics[0], "ORIGINAL");
             ////printBuffer(mics[0], "ORIGINAL SIGNAL - FIRSTMIC");

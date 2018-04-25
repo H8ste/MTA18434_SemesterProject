@@ -1,8 +1,10 @@
 ﻿using FFTW.NET;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,67 +14,68 @@ namespace MachineLearning
     {
         static void Main(string[] args)
         {
-            int outputSize = DataSample.labelSize;
-            int inputSize = 10;
-            int width = 10;
-            int height = 30;
-
             
-            Random rand = new Random();
-            NeuralNetwork nn = new NeuralNetwork(inputSize, width, height, outputSize);
-
-            WaveFileObject waveFileObject = new WaveFileObject("C:/Users/Mikke/Documents/MTA18434_SemesterProject/ML_Sound_Samples/Assets/Resources/TrainingData/guitarup_full.wav");
-
-            short[][] soundChunks = waveFileObject.ToChunks(20);
-
-            Spectrogram spec = new Spectrogram(DSProcess.STFT(soundChunks), waveFileObject.header.sampleRate);
-
-            //spec.PrintSpectrogram();
-            
-            //Example1D();
-            /*
-            DataSample[] samples = new DataSample[10];
-
-            for (int i = 0; i < 10; i++)
-            {
-                float[] temp = new float[10];
-
-                for (int j = 0; j < 5; j++)
-                {
-                    temp[j] = (50f * (float)rand.NextDouble()) + 100;
-                }
-
-                for (int j = 5; j < 10; j++)
-                {
-                    temp[j] = (50f * (float)rand.NextDouble()) - 100;
-
-                }
-
-                samples[i] = new DataSample(temp, Label.One);
-            }
-
-            for (int i = 0; i < 10; i++)
-            {
-                nn.TrainNetwork(samples);
-            }
-
-            nn.PrintOutput();
-
-            float[] data = new float[10];
-
-            for (int i = 0; i < data.Length; i++)
-            {
-                data[i] = (float)(rand.NextDouble() + 1000) * 10;
-            }
-
-            DataSample sample = new DataSample(data, Label.Two);
-
-            nn.DataClassification(sample);
-            nn.PrintOutput();
-
-            */
             Console.Write("Press <Enter> to exit... ");
             while (Console.ReadKey().Key != ConsoleKey.Enter) { }
+        }
+
+        void NetworkTraining(int inputSize, int width, int height, int itterations)
+        {
+            int outputSize = DataSample.labelSize;
+
+            string databasePath1 = "";
+            string networkPath1 = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/NetworkSave01.json";
+            NeuralNetwork network = null;
+
+            if (File.Exists(networkPath1))
+            {
+                network = NeuralNetwork.LoadNetwork(networkPath1);
+
+                if (network.inputSize != inputSize)
+                {
+                    throw new Exception();
+                }
+
+                if (network.hiddenDimension != width)
+                {
+                    throw new Exception();
+                }
+
+                if (network.hiddenSize != height)
+                {
+                    throw new Exception();
+                }
+
+            }
+            else
+            {
+                network = new NeuralNetwork(inputSize, width, height, outputSize);
+            }
+
+            if (File.Exists(databasePath1))
+            {
+                SampleDatabase samples = new SampleDatabase(databasePath1);
+                DataSample[] trainingSamples = new DataSample[10];
+                Random rand = new Random();
+
+                for (int i = 0; i < itterations; i++)
+                {
+                    // pick 10 samples
+                    for (int j = 0; j < 10; j++)
+                    {
+                        int num = rand.Next(0, samples.database.Length);
+                        trainingSamples[i] = new DataSample(samples.database[num].data, samples.database[num].label);
+                    }
+
+                    network.TrainNetwork(trainingSamples);
+                }
+
+                network.SaveNetwork(networkPath1);
+            }
+            else
+            {
+                throw new Exception();
+            }
         }
 
         static void Example1D()

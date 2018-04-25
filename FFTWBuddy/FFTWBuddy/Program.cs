@@ -12,7 +12,6 @@ namespace FFTWBuddy
 {
     class Program
     {
-        static double[] input;
 
         static void Main(string[] args)
         {
@@ -25,36 +24,43 @@ namespace FFTWBuddy
                 StreamWriter writer = new StreamWriter(tcpClient.GetStream());
                 string s = "";
 
-                while (!(s = reader.ReadLine()).Equals("Quit") || (s == null))
+                using (var timeDomain = new PinnedArray<double>(22050))
+                using (var frequencyDomain = new FftwArrayComplex(DFT.GetComplexBufferSize(timeDomain.GetSize())))
+                using (var fft = FftwPlanRC.Create(timeDomain, frequencyDomain, DftDirection.Forwards))
                 {
-                    string result = "";
-
-                    if (IsValidJson(s))
+                    while (!(s = reader.ReadLine()).Equals("Quit") || (s == null))
                     {
-                        result = ProcessMessage(s);
-                    }
+                        string result = "";
 
-                    writer.WriteLine(result);
-                    writer.Flush();
-                    GC.Collect();
+                        if (IsValidJson(s))
+                        {
+                            result = ProcessMessage(s, timeDomain, frequencyDomain, fft);
+                        }
+
+                        writer.WriteLine(result);
+                        writer.Flush();
+                        GC.Collect();
+                    }
+                    reader.Close();
+                    writer.Close();
+                    tcpClient.Close();
                 }
-                reader.Close();
-                writer.Close();
-                tcpClient.Close();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                Console.WriteLine(e.InnerException);
+                Console.WriteLine(e.Message);
                 throw;
             }
         }
 
-        private static string ProcessMessage(string s)
+        private static string ProcessMessage(string s, PinnedArray<double> pin, FftwArrayComplex com, FftwPlanRC fft)
         {
             //Deserialize and then FFTW then return datasample as json string
             WFOTransporter wav = JsonConvert.DeserializeObject<WFOTransporter>(s);
             WaveFileObject obj = new WaveFileObject(wav);
-            DataSample sample = new DataSample(FFT(obj.soundData));
+            DataSample sample = new DataSample(FFT(obj.soundData, pin, com, fft));
             string json = JsonConvert.SerializeObject(sample);
             return json;
         }
@@ -92,32 +98,31 @@ namespace FFTWBuddy
             }
         }
 
-        static double[] FFT(IList list)
+        static double[] FFT(IList list, PinnedArray<double> pin, FftwArrayComplex com, FftwPlanRC fft)
         {
-            input = new double[list.Count];
             double[] magnitudes;
+            double[] input = new double[list.Count];
             list.CopyTo(input, 0);
 
-            Console.WriteLine(list.Count);
-            Console.WriteLine(input.Length);
+            for (int i = 0; i < pin.Length; i++)
+            {
+                pin[i] = input[i];
+            }
 
+            fft.Execute();
+            Console.WriteLine(list.Count);
+            Console.WriteLine(pin.Length);
             Console.WriteLine("Attempting FFT");
 
-            using (var pinIn = new PinnedArray<double>(input))
-            using (var comOut = new FftwArrayComplex(DFT.GetComplexBufferSize(pinIn.GetSize())))
+            magnitudes = new double[com.Length];
+            for (int i = 0; i < com.Length; i++)
             {
-                DFT.FFT(pinIn, comOut);
-
-                magnitudes = new double[comOut.Length];
-                for (int i = 0; i < comOut.Length; i++)
-                {
-                    magnitudes[i] = comOut[i].Magnitude;
-                }
+                magnitudes[i] = com[i].Magnitude;
             }
 
             Console.WriteLine("Returning magnitudes");
             return magnitudes;
-        }     
+        }
     }
 }
 

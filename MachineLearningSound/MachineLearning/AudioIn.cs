@@ -11,12 +11,10 @@ namespace MachineLearning
 {
     class AudioIn
     {
-        public WaveInCapabilities deviceInfo;
         public WaveInEvent waveEvent;
         public int waveInDevices;
-        public List<short[]> soundData;
 
-        public NeuralNetwork network;
+        public NeuralNetwork network = null;
 
         private int channels;
 

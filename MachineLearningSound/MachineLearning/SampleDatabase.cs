@@ -1,12 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
+using System.IO;
 
 namespace MachineLearning
 {
-    class SampleDatabase
+    public class SampleDatabase
     {
+        public DataSample[] database;
+
+        public SampleDatabase(string path)
+        {
+            if (File.Exists(path))
+            {
+                string file = File.ReadAllText(path);
+                SampleDatabase temp = JsonConvert.DeserializeObject<SampleDatabase>(file);
+                database = temp.database;
+            }
+            else
+            {
+                throw new FileNotFoundException();
+            }
+        }
     }
 }

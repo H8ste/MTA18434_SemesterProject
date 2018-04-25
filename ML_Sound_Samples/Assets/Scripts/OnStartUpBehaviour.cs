@@ -60,11 +60,11 @@ public class OnStartUpBehaviour : MonoBehaviour
         Thread t = new Thread(new ThreadStart(Process));
         t.Start();
 
-        double[] arr = new double[waveObjects[0].soundData.Count];
-        waveObjects[1].soundData.CopyTo(arr, 0);
+        //double[] arr = new double[waveObjects[0].soundData.Count];
+        //waveObjects[1].soundData.CopyTo(arr, 0);
 
-        WriteWaveFile(arr, baseSamplePath + "/" + "test.wav");
-        Debug.Log("wrote file");
+        //WriteWaveFile(arr, baseSamplePath + "/" + "test.wav");
+        //Debug.Log("wrote file");
     }
 
     private void Update()
@@ -95,7 +95,7 @@ public class OnStartUpBehaviour : MonoBehaviour
 
     private void InitSamplePopups(int index, WaveFileObject[] wavs)
     {
-        WaveFileObject[] waves = wavs[index].ToWaveChunks(500, wavs[index]);
+        WaveFileObject[] waves = wavs[index].ToWaveChunksWithOverlaps(1000, wavs[index]);
 
         Debug.Log("Number of Chunks: " + waves.Length);
 

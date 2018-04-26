@@ -3,31 +3,38 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using FFTW.NET;
 using NAudio.Wave;
+//using WaveFileObject;
 
 namespace discretefrouiertransform
 {
     class AudioBuffers
     {
+        private WaveFileWriter writer;
+        private WaveFileWriter writerOriginal;
+        public List<short[]> mics;
         private List<short[]> buffers;
         private List<double[]> shiftedBuffers;
         private double[] outputSignal;
         private int sampleRate;
+
+        public short[] mic1;
+        public short[] mic2;
+
+        private List<double> combinedOutput;
 
         private int waveInDevices;
         private WaveInCapabilities deviceInfo;
         private WaveInEvent waveIn;
         private int channels;
 
-        private DOAclass DOA = new DOAclass();
-
         private bool firsttime;
 
         private int i = 0;
-        private double r;
-        private double BestDelay;
+        private int duration = 0;
 
 
         public List<short[]> Buffers
@@ -79,40 +86,61 @@ namespace discretefrouiertransform
 
         public AudioBuffers(int sampleRate, int channels)
         {
+            mics = new List<short[]>();
             SampleRate = sampleRate;
+            mics.Add(new short[SampleRate / 10]);
+            mics.Add(new short[SampleRate / 10]);
+
+            mic1 = new short[sampleRate / 10];
+            mic2 = new short[sampleRate / 10];
+
             Channels = channels;
             firsttime = true;
-            OutputSignal = new double[SampleRate / 5];
+            OutputSignal = new double[mics[0].Length];
 
             Buffers = new List<short[]>();
             ShiftedBuffers = new List<double[]>();
-            for (int i = 0; i < 5; i++)
+            combinedOutput = new List<double>();
+
+            for (int j = 0; j < 5; j++)
             {
-                Buffers.Add(new short[SampleRate / 5 / 2]);
-                ShiftedBuffers.Add(new double[SampleRate / 5 / 2]);
+                Buffers.Add(new short[SampleRate / 10 / 2]);
+                ShiftedBuffers.Add(new double[SampleRate / 10 / 2]);
             }
 
             WaveInDevices = WaveIn.DeviceCount;
-            for (int waveInDevice = 0; waveInDevice < WaveInDevices; waveInDevice++)
+            for (int waveInDevice = 0; waveInDevice < waveInDevices; waveInDevice++)
             {
-                DeviceInfo = WaveIn.GetCapabilities(waveInDevice);
+                WaveInCapabilities deviceInfo = WaveIn.GetCapabilities(waveInDevice);
                 Console.WriteLine("Device {0}: {1}, {2} channels",
-                    WaveInDevices, DeviceInfo.ProductName, DeviceInfo.Channels);
+                    waveInDevice, deviceInfo.ProductName, deviceInfo.Channels);
             }
 
             WaveInVar = new WaveInEvent();
             WaveInVar.DeviceNumber = 0; //Set to default
             WaveInVar.DataAvailable += waveIn_DataAvailable;
-            WaveInVar.WaveFormat = new WaveFormat(SampleRate, Channels);
+            WaveInVar.WaveFormat = new WaveFormat(SampleRate, 16, Channels);
+            Console.WriteLine(WaveInVar.WaveFormat.AverageBytesPerSecond);
+
+            /* writer = new WaveFileWriter("C:/Users/Nickl/Documents/audiosample/beamformed.wav",
+                 WaveFormat.CreateCustomFormat(WaveInVar.WaveFormat.Encoding, SampleRate, 1,
+                     WaveInVar.WaveFormat.AverageBytesPerSecond, (1 * WaveInVar.WaveFormat.BitsPerSample) / 16, 16));
+             writerOriginal = new WaveFileWriter("C:/Users/Nickl/Documents/audiosample/original.wav",
+                 WaveFormat.CreateCustomFormat(WaveInVar.WaveFormat.Encoding, SampleRate, 1,
+                     WaveInVar.WaveFormat.AverageBytesPerSecond, (1 * WaveInVar.WaveFormat.BitsPerSample) / 16, 16)); */
         }
 
-        public double[] timeDelaySignal(short[] signalInput, double s)
+        public static double[] timeDelaySignal(double[] signalInput, double s)
         {
+            //Console.WriteLine("Runs");
+
             double[] input = new double[signalInput.Length];
             for (int j = 0; j < signalInput.Length; j++)
             {
-                input[j] = (double)signalInput[j];
+                input[j] = signalInput[j];
             }
+
+            //Console.WriteLine("Runs");
 
             Complex[] output = new Complex[input.GetLength(input.Rank - 1) / 2 + 1];
             double[] inOut = new double[input.Length];
@@ -122,10 +150,12 @@ namespace discretefrouiertransform
             using (var in1Out = new PinnedArray<double>(inOut))
             {
 
+                //Console.WriteLine("fak");
+
                 DFT.FFT(pinIn, pinOut);
                 for (int j = 0; j < pinOut.Length; j++)
                 {
-                    double angle = ((2 * Math.PI) / pinOut.Length) * SampleRate * j * s;
+                    double angle = ((2 * Math.PI) / pinOut.Length) * 8000 * j * 100 * s;
                     pinOut[j] = pinOut[j] * Complex.Exp(new Complex(0, -angle));
                 }
 
@@ -135,116 +165,208 @@ namespace discretefrouiertransform
                     inOut[j] = inOut[j] / input.Length;
                 }
 
+                //Console.WriteLine("pak");
+
                 return inOut;
             }
         }
 
         public void waveIn_DataAvailable(object sender, WaveInEventArgs e)
         {
-            Console.WriteLine(e.BytesRecorded + " samples recieved");
+            //Console.WriteLine(e.BytesRecorded + " samples recieved");
 
-            //Console.WriteLine(e.BytesRecorded);
-            //RUN EVERY SAMPLING RATE / 5
+            //Console.WriteLine(e.BytesRecorded/2);
+            //RUN EVERY SAMPLING RATE / 10 * CHANNELS
 
+            //originalSignal = new double[e.BytesRecorded / 2];
+            int k = 0;
+            //bool first = true;
             for (int index = 0; index < e.BytesRecorded; index += 2)
             {
                 short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
-
-
-                if (!firsttime && index < e.BytesRecorded / 2 / 2)
-                    Buffers[3 + (i - 1) % 2][index + Buffers[3 + i % 2].Length / 2] = sample;
-
-                if (index < e.BytesRecorded / 2)
-                    Buffers[0][index] = sample;
-
-                if (index >= e.BytesRecorded / 2 / 2 && index < e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
-                    Buffers[1][index - e.BytesRecorded / 2 / 2] = sample;
-
-                if (index >= e.BytesRecorded / 2)
-                    Buffers[2][index - e.BytesRecorded / 2] = sample;
-
-                if (index >= e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
-                    Buffers[3 + (i % 2)][index - e.BytesRecorded / 2 - e.BytesRecorded / 2 / 2] = sample;
-
+                mics[(index / 2) % 2][(index / 2) - k] = sample;
+                if ((index / 2) % 2 == 0)
+                    k++;
             }
 
-            Console.Clear();
 
-            //printBuffer(Buffers, "SEPERATED INPUT SIGNAL);
-            for (int i = 0; i < buffers.Count; i++)
-                ShiftedBuffers[i] = timeDelaySignal(Buffers[i], 0.000001);
+            splitInput(mics[0]);
 
-            //printBuffer(ShiftedBuffers, "SHIFTED SEPERATED INPUT SIGNAL);
 
+            //printBuffer(mics[0], "ORIGINAL");
+            // printBuffer(mics[0], "ORIGINAL SIGNAL - FIRSTMIC");
+            //printBuffer(mics[1], "ORIGINAL SIGNAL - SECONDMIC");
+            mic1 = mics[0];
+            mic2 = mics[1];
+
+            ////Console.Clear();
+
+            //printBuffer(Buffers, "SEPERATED INPUT SIGNAL");
+            for (int j = 0; j < Buffers.Count; j++)
+            {
+                //    //Console.WriteLine("Buffer: " + Buffers.Count);
+                //    //Console.WriteLine("runs " + j);
+                //(ShiftedBuffers[j] = timeDelaySignal(Buffers[j], 0.0030631);
+            }
+
+            ////Console.WriteLine("Stuck");
+            /*
+            //printBuffer(ShiftedBuffers, "SHIFTED SEPERATED INPUT SIGNAL");
             for (int j = 0; j < OutputSignal.Length; j++)
             {
-                double hann = 0.5 * (1 - Math.Cos(2 * Math.PI * j / (OutputSignal.Length - 1)));
+                //double hann = 0.5 * (1 - Math.Cos(2 * Math.PI * j / (ShiftedBuffers[0].Length - 1)));
 
-                if (!firsttime && j < e.BytesRecorded / 2 / 2)
+                if (firsttime != true && j < ShiftedBuffers[0].Length / 2)
                 {
-                    hann = 0.5 * (1 - Math.Cos(2 * Math.PI * ((((i - 1) % 2) * Buffers[0].Length / 2) + j) / (OutputSignal.Length - 1)));
-                    OutputSignal[j] = (hann * ShiftedBuffers[0][j]) + (hann * ShiftedBuffers[3 + (i - 1) % 2][j + ShiftedBuffers[3 + (i - 1) % 2].Length / 2]);
+                    double hann1 = 0.5 * (1 - Math.Cos(2 * Math.PI * (j) / (ShiftedBuffers[0].Length - 1)));
+                    double hann2 = 0.5 * (1 - Math.Cos(2 * Math.PI * (j + ShiftedBuffers[0].Length / 2) / (ShiftedBuffers[0].Length - 1)));
+                    OutputSignal[j] = (hann1 * ShiftedBuffers[0][j]) + (hann2 * ShiftedBuffers[3 + (i - 1) % 2][j + ShiftedBuffers[3 + (i - 1) % 2].Length / 2]);
                 }
-                else if (firsttime && j < e.BytesRecorded / 2 / 2)
+                else if (firsttime == true && j < ShiftedBuffers[0].Length / 2)
                 {
+                    //double hann = 0.5 * (1 - Math.Cos(2 * Math.PI * j / (ShiftedBuffers[0].Length - 1)));
                     OutputSignal[j] = ShiftedBuffers[0][j];
                 }
-                else if (j >= e.BytesRecorded / 2 / 2 && j < e.BytesRecorded / 2)
+                else if (j >= ShiftedBuffers[0].Length / 2 && j < ShiftedBuffers[0].Length)
                 {
-                    OutputSignal[j] = (hann * ShiftedBuffers[0][j]) + (hann * ShiftedBuffers[1][j - ShiftedBuffers[1].Length / 2]);
+                    double hann1 = 0.5 * (1 - Math.Cos(2 * Math.PI * j / (ShiftedBuffers[0].Length - 1)));
+                    double hann2 = 0.5 * (1 - Math.Cos(2 * Math.PI * (j - ShiftedBuffers[0].Length / 2) / (ShiftedBuffers[0].Length - 1)));
+                    OutputSignal[j] = (hann1 * ShiftedBuffers[0][j]) + (hann2 * ShiftedBuffers[1][j - ShiftedBuffers[0].Length / 2]);
                 }
-                else if (j >= e.BytesRecorded / 2 && j < e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
+                else if (j >= ShiftedBuffers[0].Length && j < ShiftedBuffers[0].Length + ShiftedBuffers[0].Length / 2)
                 {
-                    OutputSignal[j] = (hann * ShiftedBuffers[1][j - ShiftedBuffers[1].Length / 2]) +
-                                      (hann * ShiftedBuffers[2][j - ShiftedBuffers[2].Length]);
+                    double hann1 = 0.5 * (1 - Math.Cos(2 * Math.PI * (j - ShiftedBuffers[0].Length / 2) / (ShiftedBuffers[0].Length - 1)));
+                    double hann2 = 0.5 * (1 - Math.Cos(2 * Math.PI * (j - ShiftedBuffers[0].Length) / (ShiftedBuffers[0].Length - 1)));
+
+
+                    OutputSignal[j] = (hann1 * ShiftedBuffers[1][j - ShiftedBuffers[1].Length / 2]) +
+                                      (hann2 * ShiftedBuffers[2][j - ShiftedBuffers[2].Length]);
                 }
-                else if (j >= e.BytesRecorded / 2 + e.BytesRecorded / 2 / 2)
+                else if (j >= ShiftedBuffers[0].Length + ShiftedBuffers[0].Length / 2)
                 {
-                    hann = 0.5 * (1 - Math.Cos(2 * Math.PI * (Buffers[0].Length / 2.0) + j) / (OutputSignal.Length - 1));
-                    OutputSignal[j] = (hann * ShiftedBuffers[2][j - ShiftedBuffers[2].Length]) +
-                                      (hann * ShiftedBuffers[3 + (i % 2)][
-                                           j - e.BytesRecorded / 2 - e.BytesRecorded / 2 / 2]);
-                }
+                    double hann1 = 0.5 * (1 - Math.Cos(2 * Math.PI * (j - (ShiftedBuffers[0].Length)) / (ShiftedBuffers[0].Length - 1)));
+                    double hann2 = 0.5 * (1 - Math.Cos(2 * Math.PI * (j - (ShiftedBuffers[0].Length + ShiftedBuffers[0].Length / 2)) / (ShiftedBuffers[0].Length - 1)));
+
+                    OutputSignal[j] = (hann1 * ShiftedBuffers[2][j - ShiftedBuffers[2].Length]) +
+                                      (hann2 * ShiftedBuffers[3 + (i % 2)][j - (ShiftedBuffers[0].Length + ShiftedBuffers[0].Length / 2)]);
+                } 
+                
+        }*/
+
+            //for (int j = 0; j < OutputSignal.Length; j++)
+            //{
+            //    if (j < OutputSignal.Length / 2)
+            //    {
+            //        OutputSignal[j] = ShiftedBuffers[0][j];
+            //    }
+            //    else
+            //    {
+            //        OutputSignal[j] = ShiftedBuffers[2][j - Buffers[0].Length];
+            //    }
+            //}
+
+            i++;
+            firsttime = false;
+
+            //printBuffer(mics[0], "ORIGINAL SIGNAL");
+            //printBuffer(OutputSignal, "FINALSHIFTED SIGNAL");
+
+            /*double[] beamformedSignal = new double[mics[0].Length];
+            for (int j = 0; j < beamformedSignal.Length; j++)
+                beamformedSignal[j] = mics[1][j] + OutputSignal[j];
+
+            //printBuffer(beamformedSignal, "BEAMFORMED SIGNAL");
+            //for (int j = 0; j < mics[0].Length; j++)
+            //{
+            //    combinedOutput.Add(beamformedSignal[j]);
+            //}
+            //List<byte> byteArr = new List<byte>();
+
+            for (int j = 0; j < beamformedSignal.Length; j++)
+            {
+                byte[] tempByteArr = BitConverter.GetBytes((short)beamformedSignal[j]);
+                //Console.WriteLine("Starting to Append file");
+                writer.Write(tempByteArr, 0, tempByteArr.Length);
+                //Console.WriteLine("File Appended");
+                duration++;
+                //for (int l = 0; l < 2; l++)
+                //{
+                //    byteArr.Add(tempByteArr[l]);
+                //}
+            }
+            for (int j = 0; j < OutputSignal.Length; j++)
+            {
+                byte[] tempByteArr = BitConverter.GetBytes((short)mics[0][j]);
+                //Console.WriteLine("Starting to Append file");
+                writerOriginal.Write(tempByteArr, 0, tempByteArr.Length);
+                //Console.WriteLine("File Appended");
+                //for (int l = 0; l < 2; l++)
+                //{
+                //    byteArr.Add(tempByteArr[l]);
+                //}
             }
 
-            short[] originalsignal = new short[e.BytesRecorded];
-            for (int index = 0; index < e.BytesRecorded; index += 2)
-                originalsignal[index] = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
+    */
 
-            printBuffer(originalsignal, "ORIGINAL SIGNAL");
-            printBuffer(OutputSignal, "FINALSHIFTED SIGNAL");
 
-            double[] beamformedSignal = new double[e.BytesRecorded];
-            for (int j = 0; j < beamformedSignal.Length; j++)
-                beamformedSignal[j] = originalsignal[j] + OutputSignal[j];
 
-            printBuffer(beamformedSignal, "BEAMFORMED SIGNAL");
 
-            firsttime = false;
-            i++;
 
-            Console.ReadLine();
+
+
+
+            //WaveFileObject.WriteWaveFile(byteArr.ToArray(), "C:/Users/Nickl/Documents/testing.wav", SampleRate);
+            if (duration > SampleRate * 30)
+            {
+                Console.WriteLine("File written");
+                Console.ReadLine();
+            }
+
+        }
+
+        private void splitInput(short[] input)
+        {
+            for (int index = 0; index < input.Length; index++)
+            {
+                if (!firsttime && index < input.Length / 2 / 2)
+                    Buffers[3 + (i - 1) % 2][index + Buffers[3 + i % 2].Length / 2] = input[index];
+
+                if (index < input.Length / 2)
+                    Buffers[0][index] = input[index];
+
+                if (index >= input.Length / 2 / 2 && index < input.Length / 2 + input.Length / 2 / 2)
+                    Buffers[1][index - input.Length / 2 / 2] = input[index];
+
+                if (index >= input.Length / 2)
+                    Buffers[2][index - input.Length / 2] = input[index];
+
+                if (index >= input.Length / 2 + input.Length / 2 / 2)
+                    Buffers[3 + (i % 2)][index - input.Length / 2 - input.Length / 2 / 2] = input[index];
+            }
         }
 
         private void printBuffer(List<short[]> input, string text)
         {
             Console.WriteLine(text);
-            for (int i = 0; i < input.Count; i++)
+            for (int j = 0; j < input.Count; j++)
             {
-                Console.Write("Buffer " + i + ": ");
+
+                Console.Write("\n" + "Buffer " + j + ": ");
                 Console.Write("[");
-                for (int j = 0; j < input[i].Length; j++)
+                for (int k = 0; k < input[j].Length; k++)
                 {
 
-                    Console.Write(input[i][j]);
+                    Console.Write(input[j][k]);
                     Console.Write(", ");
-                    if (j == input[i].Length - 1)
+                    if (k == input[j].Length - 1)
                     {
                         Console.WriteLine("]");
                     }
                 }
             }
         }
+
+   
         private void printBuffer(List<double[]> input, string text)
         {
             Console.WriteLine(text);
@@ -264,15 +386,15 @@ namespace discretefrouiertransform
                 }
             }
         }
-        private void printBuffer(double[] input, string text)
+        public static void printBuffer(double[] input, string text)
         {
-            Console.WriteLine(text);
-            Console.Write("[");
+            Console.Write(text + "= [");
+
             for (int j = 0; j < input.Length; j++)
             {
 
                 Console.Write(input[j]);
-                Console.Write(", ");
+                Console.Write(" ");
                 if (j == input.Length - 1)
                 {
                     Console.WriteLine("]");
@@ -280,15 +402,15 @@ namespace discretefrouiertransform
             }
 
         }
-        private void printBuffer(short[] input, string text)
+        public static void printBuffer(short[] input, string text)
         {
-            Console.WriteLine(text);
+            Console.Write(text + "=");
             Console.Write("[");
             for (int j = 0; j < input.Length; j++)
             {
 
                 Console.Write(input[j]);
-                Console.Write(", ");
+                Console.Write(" ");
                 if (j == input.Length - 1)
                 {
                     Console.WriteLine("]");
@@ -296,55 +418,7 @@ namespace discretefrouiertransform
             }
 
         }
-        public double timeDelaySignalDOA(short[] signalInput1, short[] signalInput2, double delay)
-        {
-            r = 0; BestDelay = 0;
-            double[] input1 = new double[signalInput1.Length];
-            double[] input2 = new double[signalInput2.Length];
-            for (int j = 0; j < signalInput1.Length; j++)
-            {
-                input1[j] = (double)signalInput1[j];
-                input2[j] = (double)signalInput2[j];
-            }
-
-            Complex[] output = new Complex[input1.GetLength(input1.Rank - 1) / 2 + 1];
-            double[] inOut = new double[input1.Length];
-
-            using (var pinIn = new PinnedArray<double>(input1))
-            using (var pinOut = new PinnedArray<Complex>(output))
-            using (var in1Out = new PinnedArray<double>(inOut))
-            {
-
-                DFT.FFT(pinIn, pinOut);
-                for (double i = -delay; i < delay; i++)
-                {
-                    double max = 0;
-                    for (int j = 0; j < pinOut.Length; j++)
-                    {
-                        double angle = ((2 * Math.PI) / pinOut.Length) * SampleRate * j * 0.0005;
-                        pinOut[j] = pinOut[j] * Complex.Exp(new Complex(0, -angle));
-                    }
-
-                    DFT.IFFT(pinOut, in1Out);
-                    for (int j = 0; j < inOut.Length; j++)
-                    {
-                        inOut[j] = inOut[j] / input1.Length;
-                    }
-
-                    r = DOA.CrossCorrelationFFT(inOut, input2, input2.Length);
-
-                    if (r > max)
-                    {
-                        max = r;
-                        BestDelay = delay * 0.0005;
-                    }
-
-
-                }
-            }
-            return BestDelay;
-        }
-
     }
-}
 
+
+}

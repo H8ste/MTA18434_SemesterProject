@@ -6,6 +6,7 @@ namespace discretefrouiertransform
     {
         double meanx, meany, denom, sx, sy, sxy, max, r;
         int i, j, BestDelay;
+        bool TreshReached;
 
         public  int CrossCorrelation(double[] x, double[] y, int Samples, int maxDelay)
         {
@@ -114,6 +115,16 @@ namespace discretefrouiertransform
                 r = sxy / denom;
                 return r;
               
+        }
+        public bool CheckTresholding(double[] Signal, int Thresh)
+        {
+            double[] Temp = Signal;
+            for (int i = 0; i < Temp.Length; i++)
+            {
+                if (Temp[i] > Thresh)
+                    return true;
+            }
+            return false;
         }
     }
 }

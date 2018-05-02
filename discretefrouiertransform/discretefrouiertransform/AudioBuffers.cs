@@ -21,8 +21,14 @@ namespace discretefrouiertransform
         private double[] outputSignal;
         private int sampleRate;
 
+        DOAclass DOA = new DOAclass();
+
         public short[] mic1;
         public short[] mic2;
+        public short[] mic1Buff;
+        public short[] mic2Buff;
+
+        public List<short> aleppo;
 
         private List<double> combinedOutput;
 
@@ -35,6 +41,7 @@ namespace discretefrouiertransform
 
         private int i = 0;
         private int duration = 0;
+        private Boolean controlBool = false;
 
 
         public List<short[]> Buffers
@@ -88,11 +95,15 @@ namespace discretefrouiertransform
         {
             mics = new List<short[]>();
             SampleRate = sampleRate;
-            mics.Add(new short[SampleRate / 10]);
-            mics.Add(new short[SampleRate / 10]);
+            mics.Add(new short[SampleRate/10]);
+            mics.Add(new short[SampleRate/10]);
 
             mic1 = new short[sampleRate / 10];
             mic2 = new short[sampleRate / 10];
+            mic1Buff = new  short[8000];
+            mic2Buff = new short[8000];
+
+            aleppo = new List<short>();
 
             Channels = channels;
             firsttime = true;
@@ -104,8 +115,8 @@ namespace discretefrouiertransform
 
             for (int j = 0; j < 5; j++)
             {
-                Buffers.Add(new short[SampleRate / 10 / 2]);
-                ShiftedBuffers.Add(new double[SampleRate / 10 / 2]);
+                Buffers.Add(new short[SampleRate / 10/2]);
+                ShiftedBuffers.Add(new double[SampleRate/10 / 2]);
             }
 
             WaveInDevices = WaveIn.DeviceCount;
@@ -116,11 +127,13 @@ namespace discretefrouiertransform
                     waveInDevice, deviceInfo.ProductName, deviceInfo.Channels);
             }
 
+            
             WaveInVar = new WaveInEvent();
             WaveInVar.DeviceNumber = 0; //Set to default
             WaveInVar.DataAvailable += waveIn_DataAvailable;
             WaveInVar.WaveFormat = new WaveFormat(SampleRate, 16, Channels);
             Console.WriteLine(WaveInVar.WaveFormat.AverageBytesPerSecond);
+            
 
             /* writer = new WaveFileWriter("C:/Users/Nickl/Documents/audiosample/beamformed.wav",
                  WaveFormat.CreateCustomFormat(WaveInVar.WaveFormat.Encoding, SampleRate, 1,
@@ -181,6 +194,9 @@ namespace discretefrouiertransform
             //originalSignal = new double[e.BytesRecorded / 2];
             int k = 0;
             //bool first = true;
+
+
+
             for (int index = 0; index < e.BytesRecorded; index += 2)
             {
                 short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
@@ -198,6 +214,29 @@ namespace discretefrouiertransform
             //printBuffer(mics[1], "ORIGINAL SIGNAL - SECONDMIC");
             mic1 = mics[0];
             mic2 = mics[1];
+
+            controlBool = DOA.CheckTresholding(mic1, 500);
+            if (controlBool) { 
+                for (int i = 0; i < 800; i++)
+                {
+                    aleppo.Add(mic1[i]);
+                }
+
+                if (aleppo.Count >= 8000)
+                {
+                    for (int i = 0; i < mic1Buff.Length; i++)
+                    {
+                        mic1Buff[i] = aleppo[i];
+                        mic2Buff[i] = aleppo[i];
+                    }
+                    aleppo.Clear();
+
+                    controlBool = false;
+
+                    printBuffer(mic1Buff, "Allepp ");
+                }
+
+            }
 
             ////Console.Clear();
 

@@ -519,7 +519,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Option A
+  m_Text: Blank
 --- !u!114 &114205372773103094
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -938,11 +938,13 @@ MonoBehaviour:
   m_Value: 0
   m_Options:
     m_Options:
-    - m_Text: Option A
+    - m_Text: Blank
       m_Image: {fileID: 0}
-    - m_Text: Option B
+    - m_Text: Noise
       m_Image: {fileID: 0}
-    - m_Text: Option C
+    - m_Text: Hej
+      m_Image: {fileID: 0}
+    - m_Text: Siri
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1431,7 +1433,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 411, y: 111}
+  m_AnchoredPosition: {x: 350.6786, y: 83.342285}
   m_SizeDelta: {x: 226.7, y: 153.2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &224279343354432426

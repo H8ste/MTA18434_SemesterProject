@@ -1,24 +1,29 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.IO;
+using System.Text;
 
 namespace MachineLearning
 {
+    [System.Serializable]
     public class SampleDatabase
     {
         public DataSample[] database;
 
-        public SampleDatabase(string path)
+        public SampleDatabase()
         {
-            if (File.Exists(path))
-            {
-                string file = File.ReadAllText(path);
-                SampleDatabase temp = JsonConvert.DeserializeObject<SampleDatabase>(file);
-                database = temp.database;
-            }
-            else
-            {
-                throw new FileNotFoundException();
-            }
+        }
+
+        public SampleDatabase(DataSample[] data)
+        {
+            database = data;
+        }
+
+        public SampleDatabase(DataSample[] data1, DataSample[] data2)
+        {
+            database = new DataSample[data1.Length + data2.Length];
+            data1.CopyTo(database, 0);
+            data2.CopyTo(database, data1.Length);
         }
     }
 }

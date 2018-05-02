@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace MachineLearning
 {
+    [System.Serializable]
     public class NeuralNetwork
     {
         public int inputSize;
@@ -19,9 +20,9 @@ namespace MachineLearning
         private float[] outputLayerValue;
         private float[,] hiddenLayerValue;
 
-        private float[,] inputLayerWeights;
-        private float[,,] hiddenLayerWeights;
-        private float[,] outputLayerWeights;
+        public float[,] inputLayerWeights;
+        public float[,,] hiddenLayerWeights;
+        public float[,] outputLayerWeights;
 
         private Random random;
 
@@ -55,9 +56,16 @@ namespace MachineLearning
         {
             if (File.Exists(path))
             {
-                string file = File.ReadAllText(path);
-                NeuralNetwork network = JsonConvert.DeserializeObject<NeuralNetwork>(file);
-                return network;
+                using (StreamReader r = new StreamReader(path))
+                {
+                    using (JsonReader reader = new JsonTextReader(r))
+                    {
+                        JsonSerializer serializer = new JsonSerializer();
+                        Console.WriteLine("Deserializing");
+                        NeuralNetwork network = serializer.Deserialize<NeuralNetwork>(reader);
+                        return network;
+                    }
+                }
             }
             else
             {
@@ -69,6 +77,7 @@ namespace MachineLearning
         public void DataClassification(DataSample sample)
         {
             SigmoidActivation(sample);
+            PrintOutput();
         }
 
         public void TrainNetwork(DataSample[] samples)
@@ -216,13 +225,13 @@ namespace MachineLearning
             inputlayerValue = sample.data;
 
             // First Layer Activation
-            for (int i = 0; i < inputSize; i++)
+            for (int i = 0; i < hiddenSize; i++)
             {
                 float sum = 0;
 
-                for (int j = 0; j < hiddenSize; j++)
+                for (int j = 0; j < inputSize; j++)
                 {
-                    sum += (float)(inputlayerValue[i] * inputLayerWeights[i, j]);
+                    sum += (float)(inputlayerValue[j] * inputLayerWeights[j, i]);
                 }
 
                 hiddenLayerValue[0, i] = ActivationFunctions.Sigmoid(sum);
@@ -423,6 +432,7 @@ namespace MachineLearning
         }
     }
 
+    [System.Serializable]
     public class GradientWeightVector
     {
         public float[,] inputLayerWeights;

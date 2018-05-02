@@ -2,6 +2,7 @@
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -18,6 +19,19 @@ namespace MachineLearning
 
         private int channels;
 
+        private short[] audioDataTrue;
+        private short[] audioDataOdd;
+        double[] tempOdd;
+        double[] tempTrue;
+
+        PinnedArray<double> realIn;
+        FftwArrayComplex comOut;
+        FftwPlanRC fft;
+
+        private int offsetTrue = 0;
+        private int offsetOdd = 0;
+        private int offsetInit = 0;
+
         public AudioIn(int sampleRate, int device)
         {
             if (device > WaveIn.DeviceCount)
@@ -25,18 +39,36 @@ namespace MachineLearning
                 throw new Exception();
             }
 
+            audioDataTrue = new short[4410];
+            audioDataOdd = new short[4410];
+            tempOdd = new double[audioDataTrue.Length];
+            tempTrue = new double[audioDataTrue.Length];
+
+            realIn = new PinnedArray<double>(audioDataTrue.Length);
+            comOut = new FftwArrayComplex(DFT.GetComplexBufferSize(realIn.GetSize()));
+            fft = FftwPlanRC.Create(realIn, comOut, DftDirection.Forwards);
+
             waveInDevices = WaveIn.DeviceCount;
             waveEvent = new WaveInEvent();
             waveEvent.DeviceNumber = device;
             waveEvent.DataAvailable += OnWaveIn;
             channels = WaveIn.GetCapabilities(device).Channels;
             waveEvent.WaveFormat = new WaveFormat(sampleRate, 1);
+
+            string path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/NetworkSave01.json";
+
+            // Load Neural network
+            if (File.Exists(path))
+            {
+                Console.WriteLine("exists");
+                //network = NeuralNetwork.LoadNetwork(path);
+            }
+            else
+            {
+                throw new FileNotFoundException();
+            }
+
             waveEvent.StartRecording();
-
-            string path = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "NetworkSave01.json";
-
-            // Load Neural network 
-            network = NeuralNetwork.LoadNetwork(path);
         }
 
         public void OnWaveIn(object sender, WaveInEventArgs e)
@@ -45,33 +77,67 @@ namespace MachineLearning
                 return;
             try
             {
-                short[] audioData = new short[e.Buffer.Length / 2];
-                Buffer.BlockCopy(e.Buffer, 0, audioData, 0, e.Buffer.Length);
+                Console.WriteLine("Audio in");
 
-                // FFT HERE
-
-                double[] magnitudes;
-
-                using (var pinIn = new PinnedArray<double>(audioData))
-                using (var comOut = new FftwArrayComplex(DFT.GetComplexBufferSize(pinIn.GetSize())))
+                if (offsetTrue >= 4410)
                 {
-                    DFT.FFT(pinIn, comOut);
-
-                    magnitudes = new double[comOut.Length];
-                    for (int i = 0; i < comOut.Length; i++)
-                    {
-                        magnitudes[i] = comOut[i].Magnitude;
-                    }
+                    tempTrue = Array.ConvertAll(audioDataTrue, item => (double)item);
+                    ComputeAndClassify(tempTrue);
+                    offsetTrue = 0;
                 }
+                Buffer.BlockCopy(e.Buffer, 0, audioDataTrue, offsetTrue, e.Buffer.Length);
+                offsetTrue += e.Buffer.Length;
 
-                DataSample sample = new DataSample(magnitudes);
-                network.DataClassification(sample);
-
+                if (offsetInit >= 5)
+                {
+                    if (offsetOdd >= 4410)
+                    {
+                        tempOdd = Array.ConvertAll(audioDataOdd, item => (double)item);
+                        ComputeAndClassify(tempOdd);
+                        offsetOdd = 0;
+                    }
+                    Buffer.BlockCopy(e.Buffer, 0, audioDataOdd, offsetOdd, e.Buffer.Length);
+                    offsetOdd += e.Buffer.Length;
+                }
+              
+                if (offsetInit < 5)
+                {
+                    offsetInit++;
+                }      
             }
             catch(Exception exe)
             {
-                Console.WriteLine(exe.Message);
+                Console.WriteLine(exe);
+                throw;
             }
+        }
+
+        private void ComputeAndClassify(double[] arr)
+        {
+            double[] magnitudes;
+
+            for (int i = 0; i < realIn.Length; i++)
+            {
+                realIn[i] = arr[i];
+            }
+
+            Console.WriteLine("Attempting FFT");
+            fft.Execute();
+
+            magnitudes = new double[comOut.Length];
+            for (int i = 0; i < comOut.Length; i++)
+            {
+                magnitudes[i] = comOut[i].Magnitude;
+
+                if (10 * Math.Log10(comOut[i].Magnitude * comOut[i].Magnitude) > 60)
+                {
+                    Console.WriteLine("Bin: " + i * 44100 / comOut.Length + " " + 10 * Math.Log10((comOut[i].Magnitude / 4410) * (comOut[i].Magnitude / 4410)));
+                }
+                
+            }
+
+            DataSample sample = new DataSample(magnitudes);
+            //network.DataClassification(sample);
         }
     }
 }

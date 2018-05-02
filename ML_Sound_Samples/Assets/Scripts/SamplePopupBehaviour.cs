@@ -24,7 +24,7 @@ public class SamplePopupBehaviour : MonoBehaviour
 
         Object o = Resources.Load(popData.waveFilePath);
 
-        Debug.Log(o.GetType());
+        //Debug.Log(o.GetType());
 
         if (o is AudioClip)
         {

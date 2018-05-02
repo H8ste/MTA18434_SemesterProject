@@ -1,4 +1,5 @@
 ﻿using FFTW.NET;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,16 +15,21 @@ namespace MachineLearning
     {
         static void Main(string[] args)
         {
-            
+            AudioIn audin = new AudioIn(44100, 0);
+
+            //NetworkTraining(22051, 3, 2000, 25);
+               
+
             Console.Write("Press <Enter> to exit... ");
             while (Console.ReadKey().Key != ConsoleKey.Enter) { }
         }
 
-        void NetworkTraining(int inputSize, int width, int height, int itterations)
+        static void NetworkTraining(int inputSize, int width, int height, int itterations)
         {
             int outputSize = DataSample.labelSize;
 
-            string databasePath1 = "";
+            string databasePath1 = @"C:/Users/Mikkel/Documents/MTA18434_SemesterProject/ML_Sound_Samples/Assets/Resources/SampleDatabase/Database.json";
+           
             string networkPath1 = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/NetworkSave01.json";
             NeuralNetwork network = null;
 
@@ -45,26 +51,45 @@ namespace MachineLearning
                 {
                     throw new Exception();
                 }
-
             }
             else
             {
+                Console.WriteLine("Initializing NN");
                 network = new NeuralNetwork(inputSize, width, height, outputSize);
+                Console.WriteLine("NN Initialized");
             }
 
             if (File.Exists(databasePath1))
             {
-                SampleDatabase samples = new SampleDatabase(databasePath1);
+                Console.WriteLine(File.Exists(databasePath1) ? "File exists." : "File does not exist.");
+
+                SampleDatabase temp = null;
+
+                using (StreamReader r = new StreamReader("C:/Users/Mikkel/Documents/MTA18434_SemesterProject/ML_Sound_Samples/Assets/Resources/SampleDatabase/Database.json"))
+                {
+                    using (JsonReader reader = new JsonTextReader(r))
+                    {
+                        JsonSerializer serializer = new JsonSerializer();
+                        Console.WriteLine("Deserializing");
+                        temp = serializer.Deserialize<SampleDatabase>(reader);
+                    }
+                }
+
+                Console.WriteLine(temp.database[0].data.Length);
+
                 DataSample[] trainingSamples = new DataSample[10];
                 Random rand = new Random();
 
                 for (int i = 0; i < itterations; i++)
                 {
+                    Console.WriteLine("Progress: " + i + " / " + itterations);
                     // pick 10 samples
                     for (int j = 0; j < 10; j++)
                     {
-                        int num = rand.Next(0, samples.database.Length);
-                        trainingSamples[i] = new DataSample(samples.database[num].data, samples.database[num].label);
+                        int num = rand.Next(0, temp.database.Length);
+                        trainingSamples[j] = new DataSample(temp.database[num].data, temp.database[num].label);
+
+                        Console.WriteLine("Database sample " + temp.database[num].data[0] + " " + temp.database[num].label);
                     }
 
                     network.TrainNetwork(trainingSamples);
@@ -74,6 +99,7 @@ namespace MachineLearning
             }
             else
             {
+                Console.WriteLine(File.Exists(databasePath1) ? "File exists." : "File does not exist.");
                 throw new Exception();
             }
         }

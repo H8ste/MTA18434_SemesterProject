@@ -13,6 +13,10 @@ namespace FFTWBuddy
     class Program
     {
 
+        public static int sampleRate = 44100;
+        public static int inputSize = 8820;
+
+
         static void Main(string[] args)
         {
             try
@@ -24,7 +28,7 @@ namespace FFTWBuddy
                 StreamWriter writer = new StreamWriter(tcpClient.GetStream());
                 string s = "";
 
-                using (var timeDomain = new PinnedArray<double>(22050))
+                using (var timeDomain = new PinnedArray<double>(8820))
                 using (var frequencyDomain = new FftwArrayComplex(DFT.GetComplexBufferSize(timeDomain.GetSize())))
                 using (var fft = FftwPlanRC.Create(timeDomain, frequencyDomain, DftDirection.Forwards))
                 {
@@ -55,12 +59,12 @@ namespace FFTWBuddy
             }
         }
 
-        private static string ProcessMessage(string s, PinnedArray<double> pin, FftwArrayComplex com, FftwPlanRC fft)
+        private static string ProcessMessage(string s, PinnedArray<double> pin,FftwArrayComplex com, FftwPlanRC fft)
         {
             //Deserialize and then FFTW then return datasample as json string
             WFOTransporter wav = JsonConvert.DeserializeObject<WFOTransporter>(s);
             WaveFileObject obj = new WaveFileObject(wav);
-            DataSample sample = new DataSample(FFT(obj.soundData, pin, com, fft));
+            DataSample sample = new DataSample(FFT(obj, pin, com, fft));
             string json = JsonConvert.SerializeObject(sample);
             return json;
         }
@@ -98,27 +102,47 @@ namespace FFTWBuddy
             }
         }
 
-        static double[] FFT(IList list, PinnedArray<double> pin, FftwArrayComplex com, FftwPlanRC fft)
+        static double[] FFT(WaveFileObject obj, PinnedArray<double> pin, FftwArrayComplex com, FftwPlanRC fft)
         {
             double[] magnitudes;
-            double[] input = new double[list.Count];
-            list.CopyTo(input, 0);
+            double[] input = new double[obj.soundData.Count];
+            obj.soundData.CopyTo(input, 0);
 
-            for (int i = 0; i < pin.Length; i++)
+            switch (obj.header.channels)
             {
-                pin[i] = input[i];
+                case 1:
+                    for (int i = 0; i < pin.Length; i++)
+                    {
+                        pin[i] = input[i];
+                        Console.Write(pin[i] + " : ");
+                    }
+                    break;
+
+                case 2:
+                    for (int i = 0; i < pin.Length; i++)
+                    {
+                        pin[i] = input[i + i];
+                        Console.WriteLine(pin[i]);
+                    }
+                    break;
+
+                default:
+                    break;
             }
 
             fft.Execute();
-            Console.WriteLine(list.Count);
-            Console.WriteLine(pin.Length);
-            Console.WriteLine("Attempting FFT");
 
             magnitudes = new double[com.Length];
             for (int i = 0; i < com.Length; i++)
             {
                 magnitudes[i] = com[i].Magnitude;
+                Console.Write("Bin: " + i * sampleRate / com.Length + " " + com[i].Magnitude);
             }
+
+            Console.WriteLine();
+            Console.WriteLine();
+
+            Console.WriteLine(magnitudes.Length);
 
             Console.WriteLine("Returning magnitudes");
             return magnitudes;

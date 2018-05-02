@@ -456,7 +456,7 @@ namespace FFTWBuddy
         public class WFOTransporter
         {
             public WavHeader header;
-            public ushort[] arrShort;
+            public short[] arrShort;
             public uint[] arrInt;
             public double[] arrDouble;
 
@@ -471,10 +471,10 @@ namespace FFTWBuddy
                 switch (obj.header.bit)
                 {
                     case 16:
-                        arrShort = new ushort[obj.soundData.Count];
+                        arrShort = new short[obj.soundData.Count];
                         for (int i = 0; i < obj.soundData.Count; i++)
                         {
-                            arrShort[i] = (ushort)obj.soundData[i];
+                            arrShort[i] = (short)obj.soundData[i];
                         }
                         break;
 

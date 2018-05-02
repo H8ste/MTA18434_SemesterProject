@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
+# Visual Studio 2017
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ML_Sound_Samples", "ML_Sound_Samples.csproj", "{06E16193-8FCB-C939-C299-B4919F84C2CF}"
 EndProject
 Global

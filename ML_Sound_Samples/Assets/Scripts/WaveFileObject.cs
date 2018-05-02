@@ -60,11 +60,12 @@ public class WaveFileObject
 
                 if (header.bit == 16)
                 {
-                    soundData = new List<ushort>();
+                    soundData = new List<short>();
 
                     for (int i = 0; i < header.dataSize / (header.bit / 8); i++)
                     {
-                        soundData.Add(br.ReadUInt16());
+                        soundData.Add(br.ReadInt16());
+                        //Debug.Log(soundData[i]);
                     }
                 }
 
@@ -144,7 +145,7 @@ public class WaveFileObject
                 {
                     tempObj.soundData = new List<ushort>();
 
-                    for (int i = 0; i < tempObj.header.dataSize / tempObj.header.blockSize; i++)
+                    for (int i = 0; i < tempObj.header.dataSize / (tempObj.header.bit / 8); i++)
                     {
                         tempObj.soundData.Add(br.ReadUInt16());
                     }
@@ -286,7 +287,7 @@ public class WaveFileObject
                     {
                         if (i < obj.soundData.Count)
                         {
-                            bw.Write((ushort)obj.soundData[i]);          
+                            bw.Write((short)obj.soundData[i]);          
                         }
                         else
                         {
@@ -461,19 +462,19 @@ public class WaveFileObject
     public WaveFileObject[] ToWaveChunksWithOverlaps(int ms, WaveFileObject obj)
     {
         double secs = ms / 1000d;
-        long chunkSamples = (long)(obj.header.sampleRate * secs);
+        long chunkSamples = (long)(obj.header.sampleRate * secs * obj.header.channels);
         long chunkCount = ((obj.soundData.Count / chunkSamples) * 2) - 2;
         WaveFileObject[] waves = new WaveFileObject[chunkCount];
         int osIndex = 0;
 
-        /*
-        Debug.Log("chunkCount " + chunkCount);
+        
+        //Debug.Log("chunkCount " + chunkCount);
         Debug.Log("chunkSamples " + chunkSamples);
-        Debug.Log("sampleRate " + obj.header.sampleRate);
-        Debug.Log("size " + obj.header.size);
-        Debug.Log("Block size " + obj.header.blockSize);
-        Debug.Log("Block size " + obj.header.bit);
-        */
+        //Debug.Log("sampleRate " + obj.header.sampleRate);
+        //Debug.Log("size " + obj.header.size);
+        //Debug.Log("Block size " + obj.header.blockSize);
+        //Debug.Log("Block size " + obj.header.bit);
+        
 
         Debug.Log("starting waves");
 
@@ -486,7 +487,7 @@ public class WaveFileObject
             {
                 tempHeader.dataSize = (uint)chunkSamples * 2;
                 tempHeader.blockSize = 2;
-                waves[i].soundData = new List<ushort>();
+                waves[i].soundData = new List<short>();
             }
             if (header.bit == 32)
             {
@@ -506,15 +507,16 @@ public class WaveFileObject
 
         for (int i = 0; i < chunkCount; i++)
         {
-            Debug.Log("Chunk count: " + i + " / " + chunkCount);
-            Debug.Log("osIndex : " + osIndex);
-            Debug.Log("soundDataCount : " + obj.soundData.Count);
+            //Debug.Log("Chunk count: " + i + " / " + chunkCount);
+            //Debug.Log("osIndex : " + osIndex);
+            //Debug.Log("soundDataCount : " + obj.soundData.Count);
 
             for (int j = 0; j < chunkSamples; j++)
             {
                 if (!IsOdd(i))
                 {
                     waves[i].soundData.Add(obj.soundData[osIndex]);
+                    //Debug.Log(obj.soundData[osIndex]);
                     osIndex++;
                 }
                 else
@@ -562,7 +564,7 @@ public class WaveFileObject
     public class WFOTransporter
     {
         public WavHeader header;
-        public ushort[] arrShort;
+        public short[] arrShort;
         public uint[] arrInt;
         public double[] arrDouble;
 
@@ -573,10 +575,10 @@ public class WaveFileObject
             switch (obj.header.bit)
             {
                 case 16:
-                    arrShort = new ushort[obj.soundData.Count];
+                    arrShort = new short[obj.soundData.Count];
                     for (int i = 0; i < obj.soundData.Count; i++)
                     {
-                        arrShort[i] = (ushort)obj.soundData[i];
+                        arrShort[i] = (short)obj.soundData[i];
                     }
                     break;
 

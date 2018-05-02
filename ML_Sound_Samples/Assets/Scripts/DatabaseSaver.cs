@@ -20,6 +20,7 @@ public class DatabaseSaver : MonoBehaviour
 
         if (File.Exists(baseSamplePath + databaseName))
         {
+            Debug.Log("Exists");
             // Read and concatinate file
             string file = File.ReadAllText(baseSamplePath + databaseName);
             SampleDatabase tempDatabase = JsonUtility.FromJson<SampleDatabase>(file);

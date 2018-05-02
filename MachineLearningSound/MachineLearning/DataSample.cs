@@ -14,6 +14,10 @@ namespace MachineLearning
         public int label;
         public static int labelSize = Enum.GetNames(typeof(Label)).Length;
 
+        public DataSample()
+        {
+        }
+
         public DataSample(double[] data)
         {
             this.data = data;
@@ -28,14 +32,9 @@ namespace MachineLearning
 
     public enum Label
     {
-        One,
-        Two,
-        Three,
-        Four,
-        Five,
-        Six,
-        Seven,
-        Eight,
-        Nine
+        Blank,
+        Noise,
+        Hej,
+        Siri
     };
 }

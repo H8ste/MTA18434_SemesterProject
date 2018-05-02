@@ -21,23 +21,18 @@ public class DataSample
         labelSize = Enum.GetNames(typeof(Label)).Length;
     }
 
-    public DataSample(double[] data, Label label)
+    public DataSample(double[] data, int label)
     {
         this.data = data;
-        this.label = (int)label;
+        this.label = label;
         labelSize = Enum.GetNames(typeof(Label)).Length;
     }
 }
 
 public enum Label
 {
-    One,
-    Two,
-    Three,
-    Four,
-    Five,
-    Six,
-    Seven,
-    Eight,
-    Nine
+    Blank,
+    Noise,
+    Hej,
+    Siri
 };

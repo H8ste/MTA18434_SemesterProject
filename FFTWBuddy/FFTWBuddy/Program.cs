@@ -16,7 +16,6 @@ namespace FFTWBuddy
         public static int sampleRate = 44100;
         public static int inputSize = 8820;
 
-
         static void Main(string[] args)
         {
             try
@@ -28,7 +27,7 @@ namespace FFTWBuddy
                 StreamWriter writer = new StreamWriter(tcpClient.GetStream());
                 string s = "";
 
-                using (var timeDomain = new PinnedArray<double>(8820))
+                using (var timeDomain = new PinnedArray<double>(inputSize))
                 using (var frequencyDomain = new FftwArrayComplex(DFT.GetComplexBufferSize(timeDomain.GetSize())))
                 using (var fft = FftwPlanRC.Create(timeDomain, frequencyDomain, DftDirection.Forwards))
                 {
@@ -114,7 +113,7 @@ namespace FFTWBuddy
                     for (int i = 0; i < pin.Length; i++)
                     {
                         pin[i] = input[i];
-                        Console.Write(pin[i] + " : ");
+                        //Console.Write(pin[i] + " : ");
                     }
                     break;
 
@@ -122,7 +121,7 @@ namespace FFTWBuddy
                     for (int i = 0; i < pin.Length; i++)
                     {
                         pin[i] = input[i + i];
-                        Console.WriteLine(pin[i]);
+                        //Console.WriteLine(pin[i]);
                     }
                     break;
 
@@ -135,8 +134,13 @@ namespace FFTWBuddy
             magnitudes = new double[com.Length];
             for (int i = 0; i < com.Length; i++)
             {
-                magnitudes[i] = com[i].Magnitude;
-                Console.Write("Bin: " + i * sampleRate / com.Length + " " + com[i].Magnitude);
+                magnitudes[i] = 10 * Math.Log10((com[i].Magnitude / inputSize) * (com[i].Magnitude / inputSize));
+
+                if (10 * Math.Log10((com[i].Magnitude / inputSize) * (com[i].Magnitude / inputSize)) > 10)
+                {
+                    Console.WriteLine("Bin: " + i * sampleRate / com.Length + " " + 10 * Math.Log10((com[i].Magnitude / inputSize) * (com[i].Magnitude / inputSize)));
+                }
+                
             }
 
             Console.WriteLine();

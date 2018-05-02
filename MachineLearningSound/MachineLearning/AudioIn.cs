@@ -18,6 +18,7 @@ namespace MachineLearning
         public NeuralNetwork network = null;
 
         private int channels;
+        private int bufferSize;
 
         private short[] audioDataTrue;
         private short[] audioDataOdd;
@@ -32,13 +33,14 @@ namespace MachineLearning
         private int offsetOdd = 0;
         private int offsetInit = 0;
 
-        public AudioIn(int sampleRate, int device)
+        public AudioIn(int sampleRate, int device, int bufferSize)
         {
             if (device > WaveIn.DeviceCount)
             {
                 throw new Exception();
             }
 
+            this.bufferSize = bufferSize;
             audioDataTrue = new short[4410];
             audioDataOdd = new short[4410];
             tempOdd = new double[audioDataTrue.Length];
@@ -65,7 +67,7 @@ namespace MachineLearning
             }
             else
             {
-                throw new FileNotFoundException();
+                //throw new FileNotFoundException();
             }
 
             waveEvent.StartRecording();
@@ -79,7 +81,7 @@ namespace MachineLearning
             {
                 Console.WriteLine("Audio in");
 
-                if (offsetTrue >= 4410)
+                if (offsetTrue >= bufferSize)
                 {
                     tempTrue = Array.ConvertAll(audioDataTrue, item => (double)item);
                     ComputeAndClassify(tempTrue);
@@ -90,7 +92,7 @@ namespace MachineLearning
 
                 if (offsetInit >= 5)
                 {
-                    if (offsetOdd >= 4410)
+                    if (offsetOdd >= bufferSize)
                     {
                         tempOdd = Array.ConvertAll(audioDataOdd, item => (double)item);
                         ComputeAndClassify(tempOdd);
@@ -127,11 +129,11 @@ namespace MachineLearning
             magnitudes = new double[comOut.Length];
             for (int i = 0; i < comOut.Length; i++)
             {
-                magnitudes[i] = comOut[i].Magnitude;
+                magnitudes[i] = 10 * Math.Log10((comOut[i].Magnitude / bufferSize) * (comOut[i].Magnitude / bufferSize));
 
-                if (10 * Math.Log10(comOut[i].Magnitude * comOut[i].Magnitude) > 60)
+                if (10 * Math.Log10((comOut[i].Magnitude / bufferSize) * (comOut[i].Magnitude / bufferSize)) > 60)
                 {
-                    Console.WriteLine("Bin: " + i * 44100 / comOut.Length + " " + 10 * Math.Log10((comOut[i].Magnitude / 4410) * (comOut[i].Magnitude / 4410)));
+                    Console.WriteLine("Bin: " + i * 44100 / comOut.Length + " " + 10 * Math.Log10((comOut[i].Magnitude / bufferSize) * (comOut[i].Magnitude / bufferSize)));
                 }
                 
             }

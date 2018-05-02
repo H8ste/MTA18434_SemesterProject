@@ -15,7 +15,7 @@ namespace MachineLearning
     {
         static void Main(string[] args)
         {
-            AudioIn audin = new AudioIn(44100, 0);
+            AudioIn audin = new AudioIn(44100, 0, 8820);
 
             //NetworkTraining(22051, 3, 2000, 25);
                

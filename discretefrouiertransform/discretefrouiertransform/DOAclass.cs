@@ -56,11 +56,13 @@ namespace discretefrouiertransform
                 }
 
                 r = sxy / denom;
+                Console.Write(r + " ");
                 //Console.WriteLine("r: " + r);
                 //Console.WriteLine("delay: " + delay);
                 if (r > max)
                 {
                     max = r;
+                   
                     BestDelay = delay;
                 }
             }

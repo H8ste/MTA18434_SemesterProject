@@ -12,7 +12,7 @@ namespace discretefrouiertransform
         {
             int CalDelay = 0;
             DOAclass DOA = new DOAclass() ;
-            AudioBuffers audioBuff = new AudioBuffers(8000, 2);
+            AudioBuffers audioBuff = new AudioBuffers(44100, 2);
 
             Console.WriteLine("Enter to start record");
             Console.ReadLine();
@@ -46,14 +46,15 @@ namespace discretefrouiertransform
               //  AudioBuffers.printBuffer(audioBuff.mic2, "Mic 2: ");
                 
                 //Checks if there is anything in the signal that is high enough to activate the doa
-                if (DOA.CheckTresholding(audioBuff.mic1, 100))
+                if (DOA.CheckTresholding(audioBuff.mic1, 500))
                 {
-                    Console.WriteLine("Thresholding reached, running DOA...");
+                    //Console.WriteLine("Thresholding reached, running DOA...");
                     CalDelay = DOA.CrossCorrelation(audioBuff.mic1, audioBuff.mic2, audioBuff.mic1.Length, 200);
+                   // Console.WriteLine(audioBuff.mic1.Length);
                     Console.WriteLine("Best delay " + CalDelay);
                 }
-                else
-                    Console.WriteLine("Thresholding not reached");
+               // else
+                    //Console.WriteLine("Thresholding not reached");
                     
 
             }

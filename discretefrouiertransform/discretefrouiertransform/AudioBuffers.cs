@@ -13,7 +13,9 @@ namespace discretefrouiertransform
     class AudioBuffers
     {
         private WaveFileWriter writer;
-        private WaveFileWriter writerOriginal;
+        private WaveFileWriter writerOriginal1;
+        private WaveFileWriter writerOriginal2;
+        private WaveFileWriter combinedWriter;
         public List<short[]> mics;
         private List<short[]> buffers;
         private List<double[]> shiftedBuffers;
@@ -114,10 +116,16 @@ namespace discretefrouiertransform
             WaveInVar.WaveFormat = new WaveFormat(SampleRate, 16, Channels);
             Console.WriteLine(WaveInVar.WaveFormat.AverageBytesPerSecond);
 
-            writer = new WaveFileWriter("C:/Users/Nickl/Documents/audiosample/beamformed.wav",
+            writer = new WaveFileWriter("C:/Users/Heine/Desktop/rec/beamformed.wav",
                 WaveFormat.CreateCustomFormat(WaveInVar.WaveFormat.Encoding, SampleRate, 1,
                     WaveInVar.WaveFormat.AverageBytesPerSecond, (1 * WaveInVar.WaveFormat.BitsPerSample) / 16, 16));
-            writerOriginal = new WaveFileWriter("C:/Users/Nickl/Documents/audiosample/original.wav",
+            writerOriginal1 = new WaveFileWriter("C:/Users/Heine/Desktop/rec/original1.wav",
+                WaveFormat.CreateCustomFormat(WaveInVar.WaveFormat.Encoding, SampleRate, 1,
+                    WaveInVar.WaveFormat.AverageBytesPerSecond, (1 * WaveInVar.WaveFormat.BitsPerSample) / 16, 16));
+            writerOriginal2 = new WaveFileWriter("C:/Users/Heine/Desktop/rec/original2.wav",
+                WaveFormat.CreateCustomFormat(WaveInVar.WaveFormat.Encoding, SampleRate, 1,
+                    WaveInVar.WaveFormat.AverageBytesPerSecond, (1 * WaveInVar.WaveFormat.BitsPerSample) / 16, 16));
+            combinedWriter = new WaveFileWriter("C:/Users/Heine/Desktop/rec/combined.wav",
                 WaveFormat.CreateCustomFormat(WaveInVar.WaveFormat.Encoding, SampleRate, 1,
                     WaveInVar.WaveFormat.AverageBytesPerSecond, (1 * WaveInVar.WaveFormat.BitsPerSample) / 16, 16));
         }
@@ -182,7 +190,7 @@ namespace discretefrouiertransform
             }
 
 
-            splitInput(mics[0]);
+            splitInput(mics[1]);
 
             //printBuffer(mics[0], "ORIGINAL");
             ////printBuffer(mics[0], "ORIGINAL SIGNAL - FIRSTMIC");
@@ -193,9 +201,11 @@ namespace discretefrouiertransform
             //printBuffer(Buffers, "SEPERATED INPUT SIGNAL");
             for (int j = 0; j < Buffers.Count; j++)
             {
-            //    //Console.WriteLine("Buffer: " + Buffers.Count);
-            //    //Console.WriteLine("runs " + j);
-                ShiftedBuffers[j] = timeDelaySignal(Buffers[j], 0.0030631);
+                //    //Console.WriteLine("Buffer: " + Buffers.Count);
+                //    //Console.WriteLine("runs " + j);
+                double AngleList = 90;
+                double LenghtMic = 0.025;
+                ShiftedBuffers[j] = timeDelaySignal(Buffers[j], (1)*LenghtMic * Math.Sin(AngleList * Math.PI / 180) / 343);
             }
 
             ////Console.WriteLine("Stuck");
@@ -261,7 +271,7 @@ namespace discretefrouiertransform
 
             double[] beamformedSignal = new double[mics[0].Length];
             for (int j = 0; j < beamformedSignal.Length; j++)
-                beamformedSignal[j] = mics[1][j] + OutputSignal[j];
+                beamformedSignal[j] = (mics[0][j] + OutputSignal[j])/2;
 
             //printBuffer(beamformedSignal, "BEAMFORMED SIGNAL");
             //for (int j = 0; j < mics[0].Length; j++)
@@ -281,19 +291,49 @@ namespace discretefrouiertransform
                 //{
                 //    byteArr.Add(tempByteArr[l]);
                 //}
+                
             }
+            
             for (int j = 0; j < OutputSignal.Length; j++)
             {
                 byte[] tempByteArr = BitConverter.GetBytes((short)mics[0][j]);
                 //Console.WriteLine("Starting to Append file");
-                writerOriginal.Write(tempByteArr, 0, tempByteArr.Length);
+                writerOriginal1.Write(tempByteArr, 0, tempByteArr.Length);
                 //Console.WriteLine("File Appended");
                 //for (int l = 0; l < 2; l++)
                 //{
                 //    byteArr.Add(tempByteArr[l]);
                 //}
             }
+            
 
+            for (int j = 0; j < OutputSignal.Length; j++)
+            {
+                byte[] tempByteArr = BitConverter.GetBytes((short)mics[1][j]);
+                //Console.WriteLine("Starting to Append file");
+                writerOriginal2.Write(tempByteArr, 0, tempByteArr.Length);
+                //Console.WriteLine("File Appended");
+                //for (int l = 0; l < 2; l++)
+                //{
+                //    byteArr.Add(tempByteArr[l]);
+                //}
+            }
+            
+
+
+            for (int j = 0; j < OutputSignal.Length; j++)
+            {
+                double currentNumber = (mics[0][j] + mics[1][j])/2.0;
+                byte[] tempByteArr = BitConverter.GetBytes((short)Math.Round(currentNumber));
+                //Console.WriteLine("Starting to Append file");
+                combinedWriter.Write(tempByteArr, 0, tempByteArr.Length);
+                //Console.WriteLine("File Appended");
+                //for (int l = 0; l < 2; l++)
+                //{
+                //    byteArr.Add(tempByteArr[l]);
+                //}
+            }
+            
 
 
 
@@ -302,9 +342,13 @@ namespace discretefrouiertransform
 
 
             //WaveFileObject.WriteWaveFile(byteArr.ToArray(), "C:/Users/Nickl/Documents/testing.wav", SampleRate);
-            if (duration > SampleRate*30)
+            if (duration > SampleRate*10)
             {
                 Console.WriteLine("File written");
+                writer.Close();
+                writerOriginal1.Close();
+                writerOriginal2.Close();
+                combinedWriter.Close();
                 Console.ReadLine();
             }
 

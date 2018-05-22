@@ -115,17 +115,23 @@ namespace discretefrouiertransform
             WaveInVar.DataAvailable += waveIn_DataAvailable;
             WaveInVar.WaveFormat = new WaveFormat(SampleRate, 16, Channels);
             Console.WriteLine(WaveInVar.WaveFormat.AverageBytesPerSecond);
+            string beamformer = "C:/Users/Heine/Desktop/rec/beamformertest/ /" + Program.filenameFILE + "_beamformer.wav";
+            string micro1 = "C:/Users/Heine/Desktop/rec/beamformertest/" + Program.filenameFILE + "_micro1.wav";
+            string micro2 = "C:/Users/Heine/Desktop/rec/beamformertest/" + Program.filenameFILE + "_micro2.wav";
+            string combined = "C:/Users/Heine/Desktop/rec/beamformertest/" + Program.filenameFILE + "_combined.wav";
 
-            writer = new WaveFileWriter("C:/Users/Heine/Desktop/rec/beamformed.wav",
+
+
+            writer = new WaveFileWriter(beamformer,
                 WaveFormat.CreateCustomFormat(WaveInVar.WaveFormat.Encoding, SampleRate, 1,
                     WaveInVar.WaveFormat.AverageBytesPerSecond, (1 * WaveInVar.WaveFormat.BitsPerSample) / 16, 16));
-            writerOriginal1 = new WaveFileWriter("C:/Users/Heine/Desktop/rec/original1.wav",
+            writerOriginal1 = new WaveFileWriter(micro1,
                 WaveFormat.CreateCustomFormat(WaveInVar.WaveFormat.Encoding, SampleRate, 1,
                     WaveInVar.WaveFormat.AverageBytesPerSecond, (1 * WaveInVar.WaveFormat.BitsPerSample) / 16, 16));
-            writerOriginal2 = new WaveFileWriter("C:/Users/Heine/Desktop/rec/original2.wav",
+            writerOriginal2 = new WaveFileWriter(micro2,
                 WaveFormat.CreateCustomFormat(WaveInVar.WaveFormat.Encoding, SampleRate, 1,
                     WaveInVar.WaveFormat.AverageBytesPerSecond, (1 * WaveInVar.WaveFormat.BitsPerSample) / 16, 16));
-            combinedWriter = new WaveFileWriter("C:/Users/Heine/Desktop/rec/combined.wav",
+            combinedWriter = new WaveFileWriter(combined,
                 WaveFormat.CreateCustomFormat(WaveInVar.WaveFormat.Encoding, SampleRate, 1,
                     WaveInVar.WaveFormat.AverageBytesPerSecond, (1 * WaveInVar.WaveFormat.BitsPerSample) / 16, 16));
         }
@@ -203,8 +209,8 @@ namespace discretefrouiertransform
             {
                 //    //Console.WriteLine("Buffer: " + Buffers.Count);
                 //    //Console.WriteLine("runs " + j);
-                double AngleList = 90;
-                double LenghtMic = 0.025;
+                double AngleList = 45;
+                double LenghtMic = 0.075;
                 ShiftedBuffers[j] = timeDelaySignal(Buffers[j], (1)*LenghtMic * Math.Sin(AngleList * Math.PI / 180) / 343);
             }
 
@@ -349,6 +355,7 @@ namespace discretefrouiertransform
                 writerOriginal1.Close();
                 writerOriginal2.Close();
                 combinedWriter.Close();
+                Environment.Exit(0);
                 Console.ReadLine();
             }
 

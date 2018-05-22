@@ -9,16 +9,20 @@ namespace discretefrouiertransform
 {
     class Program
     {
+        public static string filenameFILE;
         public static List<short[]> buffers = new List<short[]>();
         static void Main(string[] args)
         {
-            AudioBuffers inputAudio = new AudioBuffers(8000, 2);
+            
+        
 
             //ExampleUsePlanDirectly();
             Console.WriteLine("Enter to start recording");
-            Console.ReadLine();
+            Console.WriteLine();
+            filenameFILE = Console.ReadLine();
+            AudioBuffers inputAudio = new AudioBuffers(8000, 2);
             inputAudio.WaveInVar.StartRecording();
-            Console.WriteLine("Recording");
+            Console.WriteLine("Recording " + filenameFILE);
 
             while (true)
             {

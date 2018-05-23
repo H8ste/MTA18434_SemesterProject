@@ -59,11 +59,11 @@ public class WaveFileObject
 
                 if (header.bit == 16)
                 {
-                    soundData = new List<ushort>();
+                    soundData = new List<short>();
 
                     for (int i = 0; i < header.dataSize / header.blockSize; i++)
                     {
-                        soundData.Add(br.ReadUInt16());
+                        soundData.Add(br.ReadInt16());
                     }
                 }
 

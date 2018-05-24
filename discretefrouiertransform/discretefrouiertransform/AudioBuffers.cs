@@ -120,10 +120,10 @@ namespace discretefrouiertransform
             WaveInVar.DataAvailable += waveIn_DataAvailable;
             WaveInVar.WaveFormat = new WaveFormat(SampleRate, 16, Channels);
             Console.WriteLine(WaveInVar.WaveFormat.AverageBytesPerSecond);
-            string beamformer = "C:/Users/Heine/Desktop/" + Program.filenameFILE + "_beamformer.wav";
-            string micro1 = "C:/Users/Heine/Desktop/rec/beamformertest/" + Program.filenameFILE + "_micro1.wav";
-            string micro2 = "C:/Users/Heine/Desktop/rec/beamformertest/" + Program.filenameFILE + "_micro2.wav";
-            string combined = "C:/Users/Heine/Desktop/rec/beamformertest/" + Program.filenameFILE + "_combined.wav";
+            string beamformer = "C:/Users/Nickl/Aalborg Universitet/OneDrive - Aalborg Universitet/2ndtrybeamformer/" + Program.filenameFILE + "_beamformer.wav";
+            string micro1 = "C:/Users/Nickl/Aalborg Universitet/OneDrive - Aalborg Universitet/2ndtrybeamformer/" + Program.filenameFILE + "_micro1.wav";
+            string micro2 = "C:/Users/Nickl/Aalborg Universitet/OneDrive - Aalborg Universitet/2ndtrybeamformer/" + Program.filenameFILE + "_micro2.wav";
+            string combined = "C:/Users/Nickl/Aalborg Universitet/OneDrive - Aalborg Universitet/2ndtrybeamformer/" + Program.filenameFILE + "_combined.wav";
 
 
 

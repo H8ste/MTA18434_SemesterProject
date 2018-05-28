@@ -19,6 +19,7 @@ namespace MachineLearning
 
         private int channels;
         private int bufferSize;
+        private int sampleRate;
 
         private short[] audioDataTrue;
         private short[] audioDataOdd;
@@ -40,9 +41,9 @@ namespace MachineLearning
                 throw new Exception();
             }
 
+            this.sampleRate = sampleRate;
             this.bufferSize = bufferSize;
-            audioDataTrue = new short[4410];
-            audioDataOdd = new short[4410];
+            audioDataTrue = new short[bufferSize + 20286];
             tempOdd = new double[audioDataTrue.Length];
             tempTrue = new double[audioDataTrue.Length];
 
@@ -63,12 +64,14 @@ namespace MachineLearning
             if (File.Exists(path))
             {
                 Console.WriteLine("exists");
-                //network = NeuralNetwork.LoadNetwork(path);
+                network = NeuralNetwork.LoadNetwork(path);
             }
             else
             {
-                //throw new FileNotFoundException();
+                throw new FileNotFoundException();
             }
+
+            //network.PrintWeights();
 
             waveEvent.StartRecording();
         }
@@ -87,25 +90,9 @@ namespace MachineLearning
                     ComputeAndClassify(tempTrue);
                     offsetTrue = 0;
                 }
-                Buffer.BlockCopy(e.Buffer, 0, audioDataTrue, offsetTrue, e.Buffer.Length);
-                offsetTrue += e.Buffer.Length;
 
-                if (offsetInit >= 5)
-                {
-                    if (offsetOdd >= bufferSize)
-                    {
-                        tempOdd = Array.ConvertAll(audioDataOdd, item => (double)item);
-                        ComputeAndClassify(tempOdd);
-                        offsetOdd = 0;
-                    }
-                    Buffer.BlockCopy(e.Buffer, 0, audioDataOdd, offsetOdd, e.Buffer.Length);
-                    offsetOdd += e.Buffer.Length;
-                }
-              
-                if (offsetInit < 5)
-                {
-                    offsetInit++;
-                }      
+                Buffer.BlockCopy(e.Buffer, 0, audioDataTrue, offsetTrue, e.Buffer.Length);
+                offsetTrue += e.Buffer.Length;             
             }
             catch(Exception exe)
             {
@@ -123,23 +110,24 @@ namespace MachineLearning
                 realIn[i] = arr[i];
             }
 
-            Console.WriteLine("Attempting FFT");
+            Console.WriteLine("FFT");
             fft.Execute();
 
             magnitudes = new double[comOut.Length];
-            for (int i = 0; i < comOut.Length; i++)
+            for (int i = 0; i < 4000; i++)
             {
                 magnitudes[i] = 10 * Math.Log10((comOut[i].Magnitude / bufferSize) * (comOut[i].Magnitude / bufferSize));
 
-                if (10 * Math.Log10((comOut[i].Magnitude / bufferSize) * (comOut[i].Magnitude / bufferSize)) > 60)
+                if (10 * Math.Log10((comOut[i].Magnitude / bufferSize) * (comOut[i].Magnitude / bufferSize)) > 40)
                 {
-                    Console.WriteLine("Bin: " + i * 44100 / comOut.Length + " " + 10 * Math.Log10((comOut[i].Magnitude / bufferSize) * (comOut[i].Magnitude / bufferSize)));
+                    //Console.WriteLine("Bin: " + i * sampleRate / comOut.Length + " " + 10 * Math.Log10((comOut[i].Magnitude / bufferSize) * (comOut[i].Magnitude / bufferSize)));
                 }
                 
             }
-
             DataSample sample = new DataSample(magnitudes);
-            //network.DataClassification(sample);
+
+            Console.WriteLine("Classification");
+            network.DataClassification(sample);
         }
     }
 }

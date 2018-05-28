@@ -95,7 +95,7 @@ public class OnStartUpBehaviour : MonoBehaviour
 
     private void InitSamplePopups(int index, WaveFileObject[] wavs)
     {
-        WaveFileObject[] waves = wavs[index].ToWaveChunksWithOverlaps(200, wavs[index]);
+        WaveFileObject[] waves = wavs[index].ToWaveChunksWithOverlaps(40, wavs[index]);
 
         Debug.Log("Number of Chunks: " + waves.Length);
 

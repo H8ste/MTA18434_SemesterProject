@@ -940,11 +940,55 @@ MonoBehaviour:
     m_Options:
     - m_Text: Blank
       m_Image: {fileID: 0}
-    - m_Text: Noise
+    - m_Text: A
       m_Image: {fileID: 0}
-    - m_Text: Hej
+    - m_Text: B
       m_Image: {fileID: 0}
-    - m_Text: Siri
+    - m_Text: C
+      m_Image: {fileID: 0}
+    - m_Text: D
+      m_Image: {fileID: 0}
+    - m_Text: E
+      m_Image: {fileID: 0}
+    - m_Text: F
+      m_Image: {fileID: 0}
+    - m_Text: G
+      m_Image: {fileID: 0}
+    - m_Text: H
+      m_Image: {fileID: 0}
+    - m_Text: I
+      m_Image: {fileID: 0}
+    - m_Text: J
+      m_Image: {fileID: 0}
+    - m_Text: K
+      m_Image: {fileID: 0}
+    - m_Text: L
+      m_Image: {fileID: 0}
+    - m_Text: M
+      m_Image: {fileID: 0}
+    - m_Text: N
+      m_Image: {fileID: 0}
+    - m_Text: O
+      m_Image: {fileID: 0}
+    - m_Text: P
+      m_Image: {fileID: 0}
+    - m_Text: Q
+      m_Image: {fileID: 0}
+    - m_Text: R
+      m_Image: {fileID: 0}
+    - m_Text: S
+      m_Image: {fileID: 0}
+    - m_Text: T
+      m_Image: {fileID: 0}
+    - m_Text: U
+      m_Image: {fileID: 0}
+    - m_Text: V
+      m_Image: {fileID: 0}
+    - m_Text: X
+      m_Image: {fileID: 0}
+    - m_Text: Y
+      m_Image: {fileID: 0}
+    - m_Text: Z
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1433,7 +1477,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 350.6786, y: 83.342285}
+  m_AnchoredPosition: {x: 292.48724, y: 106.66791}
   m_SizeDelta: {x: 226.7, y: 153.2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &224279343354432426

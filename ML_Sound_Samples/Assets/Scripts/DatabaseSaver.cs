@@ -6,7 +6,7 @@ using UnityEngine;
 public class DatabaseSaver : MonoBehaviour
 {
     string baseSamplePath;
-    string databaseName = "Database.json";
+    string databaseName = "LetterDatabase.json";
 
     public void Start()
     {

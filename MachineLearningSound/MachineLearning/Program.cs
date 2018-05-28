@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Reflection;
+using System.Reflection; 
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,12 +13,20 @@ namespace MachineLearning
 {
     class Program
     {
+        public static NeuralNetwork network = null;
+
         static void Main(string[] args)
         {
-            AudioIn audin = new AudioIn(44100, 0, 8820);
+            //AudioIn audin = new AudioIn(44100, 0, 882*2);
 
-            //NetworkTraining(22051, 3, 2000, 25);
-               
+            
+            for (int i = 0; i < 10; i++)
+            {
+                NetworkTraining(4000, 5, 500, 20);
+                GC.Collect();
+            }
+
+            network.PrintAverageGradientList();
 
             Console.Write("Press <Enter> to exit... ");
             while (Console.ReadKey().Key != ConsoleKey.Enter) { }
@@ -31,7 +39,7 @@ namespace MachineLearning
             string databasePath1 = @"C:/Users/Mikkel/Documents/MTA18434_SemesterProject/ML_Sound_Samples/Assets/Resources/SampleDatabase/Database.json";
            
             string networkPath1 = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "/NetworkSave01.json";
-            NeuralNetwork network = null;
+            
 
             if (File.Exists(networkPath1))
             {
@@ -61,7 +69,7 @@ namespace MachineLearning
 
             if (File.Exists(databasePath1))
             {
-                Console.WriteLine(File.Exists(databasePath1) ? "File exists." : "File does not exist.");
+                Console.WriteLine(File.Exists(databasePath1) ? "Database exists." : "File does not exist.");
 
                 SampleDatabase temp = null;
 
@@ -89,13 +97,15 @@ namespace MachineLearning
                         int num = rand.Next(0, temp.database.Length);
                         trainingSamples[j] = new DataSample(temp.database[num].data, temp.database[num].label);
 
-                        Console.WriteLine("Database sample " + temp.database[num].data[0] + " " + temp.database[num].label);
+                        //Console.WriteLine("Database sample " + temp.database[num].data[0] + " " + temp.database[num].label);
                     }
 
                     network.TrainNetwork(trainingSamples);
                 }
 
+                Console.WriteLine("Saving network");
                 network.SaveNetwork(networkPath1);
+                Console.WriteLine("Network saved");
             }
             else
             {

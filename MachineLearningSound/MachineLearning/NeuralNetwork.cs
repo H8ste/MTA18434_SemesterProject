@@ -16,7 +16,7 @@ namespace MachineLearning
         public int hiddenSize;
         public int outputSize;
 
-        private double[] inputlayerValue;
+        private double[] inputLayerValue;
         private float[] outputLayerValue;
         private float[,] hiddenLayerValue;
 
@@ -24,7 +24,15 @@ namespace MachineLearning
         public float[,,] hiddenLayerWeights;
         public float[,] outputLayerWeights;
 
+        public List<float> avgGradientList = new List<float>();
+
         private Random random;
+        private float learningRate = .01f;
+
+        //These should be serialized 
+        private static int sumCount;
+        private static float totalsum;
+        private static float averageCost;
 
         public NeuralNetwork(int inputSize, int hiddenDimension, int hiddenSize, int outputSize)
         {
@@ -77,7 +85,38 @@ namespace MachineLearning
         public void DataClassification(DataSample sample)
         {
             SigmoidActivation(sample);
-            PrintOutput();
+
+            if (ReturnCost(CreateIdealVector(sample.label)) < .5)
+            {
+                Console.Write("Classified: ");
+                float maxVal = outputLayerValue[0];
+                int index = 0;
+
+                for (int i = 0; i < outputSize; i++)
+                {
+                    if (outputLayerValue[i] > maxVal)
+                    {
+                        maxVal = outputLayerValue[i];
+                        index = i;
+                    }
+                }
+
+                switch (index)
+                {
+                    case 0:
+                        Console.Write("Classified: Blank");
+                        break;
+                    case 1:
+                        Console.Write("Classified: Noise");
+                        break;
+                    case 2:
+                        Console.Write("Classified: Hej");
+                        break;
+                    case 3:
+                        Console.Write("Classified: Siri");
+                        break;
+                }
+            }
         }
 
         public void TrainNetwork(DataSample[] samples)
@@ -140,13 +179,20 @@ namespace MachineLearning
                     outputLayerWeights[i, j] = outputLayerWeights[i, j] - sum;
                 }
             }
+
+            
+        }
+
+        public void PrintAverageCost()
+        {
+            Console.WriteLine("Average Cost is: " + averageCost);
         }
 
         public void PrintInput()
         {
             for (int i = 0; i < inputSize; i++)
             {
-                Console.WriteLine("Input value: " + i + " " + inputlayerValue[i]);
+                Console.WriteLine("Input value: " + i + " " + inputLayerValue[i]);
             }
         }
 
@@ -203,7 +249,17 @@ namespace MachineLearning
             PrintOutput();
         }
 
-        float ReturnCost(float[] idealVector)
+        public void PrintAverageGradientList()
+        {
+            Console.WriteLine();
+            for (int i = 0; i < avgGradientList.Count; i++)
+            {
+                Console.Write(avgGradientList[i] + " ");
+            }
+            Console.WriteLine();
+        }
+
+        private float ReturnCost(float[] idealVector)
         {
             float sum = 0;
 
@@ -211,18 +267,27 @@ namespace MachineLearning
             {
                 sum += (outputLayerValue[i] - idealVector[i]) * (outputLayerValue[i] - idealVector[i]);
             }
-
+            averageCost = AverageCost(sum);
             return sum;
+        }
+
+        private float AverageCost(float sum)
+        {
+            sumCount++;
+            totalsum += sum;
+            avgGradientList.Add(totalsum / sumCount);
+            return totalsum / sumCount;
         }
 
         private void SigmoidActivation(DataSample sample)
         {
             if (sample.data.Length != inputSize)
             {
+                Console.WriteLine("NOT the same size - " + sample.data.Length + " / " + inputSize);
                 return;
             }
 
-            inputlayerValue = sample.data;
+            inputLayerValue = sample.data;
 
             // First Layer Activation
             for (int i = 0; i < hiddenSize; i++)
@@ -231,7 +296,7 @@ namespace MachineLearning
 
                 for (int j = 0; j < inputSize; j++)
                 {
-                    sum += (float)(inputlayerValue[j] * inputLayerWeights[j, i]);
+                    sum += (float)(inputLayerValue[j] * inputLayerWeights[j, i]);
                 }
 
                 hiddenLayerValue[0, i] = ActivationFunctions.Sigmoid(sum);
@@ -265,7 +330,7 @@ namespace MachineLearning
                 outputLayerValue[i] = ActivationFunctions.Sigmoid(sum);
             }
 
-            //Console.WriteLine("Cost after Activation is: " + ReturnCost(CreateIdealVector(sample.label)));
+            
         }
 
         private GradientWeightVector[] GradientBackPropArr(DataSample[] samples)
@@ -274,10 +339,8 @@ namespace MachineLearning
 
             for (int i = 0; i < samples.Length; i++)
             {
-                SigmoidActivation(samples[i]);
                 gradients[i] = GradientBackProp(samples[i]);
             }
-
             return gradients;
         }
 
@@ -290,6 +353,14 @@ namespace MachineLearning
             float[,] hiddenLayerDelta = new float[hiddenDimension - 1, hiddenSize];
             float[] inputLayerDelta = new float[inputSize];
 
+            SigmoidActivation(sample);
+            Console.WriteLine("Label: " + sample.label);
+            Console.WriteLine();
+            PrintOutput();
+            Console.WriteLine();
+            Console.WriteLine("Cost after Activation is: " + ReturnCost(CreateIdealVector(sample.label)));
+            PrintAverageCost();
+
             // Backpropagation for the outputlayer
             for (int i = 0; i < outputSize; i++)
             {
@@ -298,7 +369,7 @@ namespace MachineLearning
 
                 for (int j = 0; j < hiddenSize; j++)
                 {
-                    weightVector.outputLayerWeights[i, j] = outputLayerDelta[i] * hiddenLayerValue[hiddenDimension - 1, j];
+                    weightVector.outputLayerWeights[i, j] = learningRate * (outputLayerDelta[i] * hiddenLayerValue[hiddenDimension - 1, j]);
                 }
             }
 
@@ -319,13 +390,13 @@ namespace MachineLearning
 
                 for (int j = 0; j < hiddenSize; j++)
                 {
-                    weightVector.hiddenLayerWeights[hiddenDimension - 3, i, j] = hiddenLayerDelta[hiddenDimension - 2, i] *
-                        hiddenLayerValue[hiddenDimension - 2, i] * (1 - hiddenLayerValue[hiddenDimension - 2, i]) *
-                        hiddenLayerValue[hiddenDimension - 3, j];
+                    weightVector.hiddenLayerWeights[hiddenDimension - 2, i, j] = learningRate * (hiddenLayerDelta[hiddenDimension - 2, i] *
+                        hiddenLayerValue[hiddenDimension - 1, i] * (1 - hiddenLayerValue[hiddenDimension - 1, i]) *
+                        hiddenLayerValue[hiddenDimension - 2, j]);
                 }
             }
 
-            for (int i = hiddenDimension - 3; i > 0; i--)
+            for (int i = hiddenDimension - 2; i > 0; i--)
             {
                 for (int j = 0; j < hiddenSize; j++)
                 {
@@ -333,15 +404,15 @@ namespace MachineLearning
 
                     for (int k = 0; k < hiddenSize; k++)
                     {
-                        sum += hiddenLayerDelta[i + 1, j] * hiddenLayerWeights[i, j, k];
+                        sum += hiddenLayerDelta[i, j] * hiddenLayerWeights[i, j, k];
                     }
 
                     hiddenLayerDelta[i, j] = sum;
 
                     for (int k = 0; k < hiddenSize; k++)
                     {
-                        weightVector.hiddenLayerWeights[i - 1, j, k] = hiddenLayerDelta[i, j] * hiddenLayerValue[i, j] *
-                            (1 - hiddenLayerValue[i, j]) * hiddenLayerValue[i - 1, j];
+                        weightVector.hiddenLayerWeights[i, j, k] = learningRate * (hiddenLayerDelta[i, j] * hiddenLayerValue[i, j] *
+                            (1 - hiddenLayerValue[i, j]) * hiddenLayerValue[i - 1, j]);
                     }
                 }
             }
@@ -360,8 +431,8 @@ namespace MachineLearning
 
                 for (int j = 0; j < hiddenSize; j++)
                 {
-                    weightVector.inputLayerWeights[i, j] = inputLayerDelta[i] * hiddenLayerValue[0, j] *
-                        (1 - hiddenLayerValue[0, j]) * (float)inputlayerValue[i];
+                    weightVector.inputLayerWeights[i, j] = learningRate * (inputLayerDelta[i] * hiddenLayerValue[0, j] *
+                        (1 - hiddenLayerValue[0, j]) * (float)inputLayerValue[i]);
                 }
             }
 
@@ -388,7 +459,7 @@ namespace MachineLearning
 
         private void InputLayerInit()
         {
-            inputlayerValue = new double[inputSize];
+            inputLayerValue = new double[inputSize];
             inputLayerWeights = new float[inputSize, hiddenSize];
 
             for (int i = 0; i < inputSize; i++)

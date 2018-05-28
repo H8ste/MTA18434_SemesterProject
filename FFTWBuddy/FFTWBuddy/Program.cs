@@ -14,7 +14,7 @@ namespace FFTWBuddy
     {
 
         public static int sampleRate = 44100;
-        public static int inputSize = 8820;
+        public static int inputSize = 22050;
 
         static void Main(string[] args)
         {
@@ -103,8 +103,11 @@ namespace FFTWBuddy
 
         static double[] FFT(WaveFileObject obj, PinnedArray<double> pin, FftwArrayComplex com, FftwPlanRC fft)
         {
+            Console.WriteLine("FFT");
             double[] magnitudes;
-            double[] input = new double[obj.soundData.Count];
+            Console.WriteLine(obj.soundData.Count);
+            double[] input = new double[obj.soundData.Count + 20286];
+            Array.Clear(input, 0, input.Length);
             obj.soundData.CopyTo(input, 0);
 
             switch (obj.header.channels)
@@ -132,21 +135,19 @@ namespace FFTWBuddy
             fft.Execute();
 
             magnitudes = new double[com.Length];
-            for (int i = 0; i < com.Length; i++)
+            for (int i = 0; i < 4000; i++)
             {
                 magnitudes[i] = 10 * Math.Log10((com[i].Magnitude / inputSize) * (com[i].Magnitude / inputSize));
-
+                /*
                 if (10 * Math.Log10((com[i].Magnitude / inputSize) * (com[i].Magnitude / inputSize)) > 10)
                 {
                     Console.WriteLine("Bin: " + i * sampleRate / com.Length + " " + 10 * Math.Log10((com[i].Magnitude / inputSize) * (com[i].Magnitude / inputSize)));
                 }
-                
+                */
             }
 
+            Console.WriteLine(com.Length);
             Console.WriteLine();
-            Console.WriteLine();
-
-            Console.WriteLine(magnitudes.Length);
 
             Console.WriteLine("Returning magnitudes");
             return magnitudes;

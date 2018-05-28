@@ -120,10 +120,10 @@ namespace discretefrouiertransform
             WaveInVar.DataAvailable += waveIn_DataAvailable;
             WaveInVar.WaveFormat = new WaveFormat(SampleRate, 16, Channels);
             Console.WriteLine(WaveInVar.WaveFormat.AverageBytesPerSecond);
-            string beamformer = "C:/Users/Nickl/Aalborg Universitet/OneDrive - Aalborg Universitet/2ndtrybeamformer/" + Program.filenameFILE + "_beamformer.wav";
-            string micro1 = "C:/Users/Nickl/Aalborg Universitet/OneDrive - Aalborg Universitet/2ndtrybeamformer/" + Program.filenameFILE + "_micro1.wav";
-            string micro2 = "C:/Users/Nickl/Aalborg Universitet/OneDrive - Aalborg Universitet/2ndtrybeamformer/" + Program.filenameFILE + "_micro2.wav";
-            string combined = "C:/Users/Nickl/Aalborg Universitet/OneDrive - Aalborg Universitet/2ndtrybeamformer/" + Program.filenameFILE + "_combined.wav";
+            string beamformer = "C:/Users/Nickl/Aalborg Universitet/OneDrive - Aalborg Universitet/3rdtryBeamformer/onlyBeamformer/" + Program.filenameFILE + "_beamformer.wav";
+            string micro1 = "C:/Users/Nickl/Aalborg Universitet/OneDrive - Aalborg Universitet/3rdtryBeamformer/" + Program.filenameFILE + "_micro1.wav";
+            string micro2 = "C:/Users/Nickl/Aalborg Universitet/OneDrive - Aalborg Universitet/3rdtryBeamformer/" + Program.filenameFILE + "_micro2.wav";
+            string combined = "C:/Users/Nickl/Aalborg Universitet/OneDrive - Aalborg Universitet/3rdtryBeamformer/" + Program.filenameFILE + "_combined.wav";
 
 
 
@@ -201,7 +201,7 @@ namespace discretefrouiertransform
             }
 
 
-            splitInput(mics[1]);
+            splitInput(mics[0]);
 
             //printBuffer(mics[0], "ORIGINAL");
             ////printBuffer(mics[0], "ORIGINAL SIGNAL - FIRSTMIC");
@@ -214,9 +214,11 @@ namespace discretefrouiertransform
             {
                 //    //Console.WriteLine("Buffer: " + Buffers.Count);
                 //    //Console.WriteLine("runs " + j);
-                double AngleList = 45;
+                double AngleList = 50;
                 double LenghtMic = 0.075;
-                ShiftedBuffers[j] = timeDelaySignal(Buffers[j], (1)*LenghtMic * Math.Sin(AngleList * Math.PI / 180) / 343);
+                double reset = (1) * LenghtMic * Math.Cos(90 * Math.PI / 180) / 343;
+                double shiftinseconds = (-1) * LenghtMic * Math.Cos(AngleList * Math.PI / 180) / 343;
+                ShiftedBuffers[j] = timeDelaySignal(Buffers[j], shiftinseconds);
             }
 
             ////Console.WriteLine("Stuck");
@@ -262,17 +264,7 @@ namespace discretefrouiertransform
                 }
             }
 
-            //for (int j = 0; j < OutputSignal.Length; j++)
-            //{
-            //    if (j < OutputSignal.Length / 2)
-            //    {
-            //        OutputSignal[j] = ShiftedBuffers[0][j];
-            //    }
-            //    else
-            //    {
-            //        OutputSignal[j] = ShiftedBuffers[2][j - Buffers[0].Length];
-            //    }
-            //}
+
 
             i++;
             firsttime = false;
@@ -282,7 +274,7 @@ namespace discretefrouiertransform
 
             double[] beamformedSignal = new double[mics[0].Length];
             for (int j = 0; j < beamformedSignal.Length; j++)
-                beamformedSignal[j] = (mics[0][j] + OutputSignal[j])/2;
+                beamformedSignal[j] = (mics[1][j] + OutputSignal[j])/2;
 
             //printBuffer(beamformedSignal, "BEAMFORMED SIGNAL");
             //for (int j = 0; j < mics[0].Length; j++)
@@ -353,7 +345,7 @@ namespace discretefrouiertransform
 
 
             //WaveFileObject.WriteWaveFile(byteArr.ToArray(), "C:/Users/Nickl/Documents/testing.wav", SampleRate);
-            if (duration > SampleRate*10)
+            if (duration > SampleRate*30)
             {
                 Console.WriteLine("File written");
                 writer.Close();
